@@ -2,6 +2,7 @@
   "name": "micro-insurtech/php-gateway",
   "description": "PHP gateway layer for the Micro-InsurTech Brokerage Engine.",
   "type": "project",
+  "license": "proprietary",
   "require": {
     "php": "^8.1"
   },
