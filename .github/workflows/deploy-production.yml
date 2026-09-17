@@ -1,0 +1,20 @@
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  production-placeholder:
+    name: Production Deployment Placeholder
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Explain deployment status
+        run: |
+          echo "Production deployment is intentionally placeholder-only."
+          echo "Configure Azure targets and secrets before enabling real deployment steps."
