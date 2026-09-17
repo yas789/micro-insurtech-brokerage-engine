@@ -69,7 +69,7 @@ IUnderwriterService
   CalculatePremiumAsync(PropertyEvaluationDto property) -> Task<QuoteResult>
 ```
 
-No implementation code is included yet. This contract defines the future shape of the .NET underwriting abstraction.
+This contract is implemented in `core-engine/Services/IUnderwriterService.cs`.
 
 ## Underwriter Schemes
 
@@ -115,9 +115,21 @@ Required behavior:
 - Handle failed, invalid, or unavailable postcode responses gracefully.
 - Avoid blocking quote generation unless region data is a hard business requirement.
 
+Implemented behavior:
+
+- `PostcodesIoLookupService` calls `/postcodes/{postcode}` against `POSTCODES_API_BASE_URL`.
+- Lookup failures are logged and return `null` region.
+- Request cancellation is propagated.
+
 ## API Behavior
 
 ### Quote Request
+
+Endpoint:
+
+```text
+POST /api/quotes
+```
 
 Expected logical payload:
 
@@ -154,7 +166,12 @@ Expected logical response:
 }
 ```
 
-The final implementation should return quotes ordered by premium or allow the frontend to sort them before rendering.
+The endpoint returns quotes ordered from lowest premium to highest premium.
+
+Current persistence status:
+
+- Quote calculation and postcode enrichment are implemented.
+- Saving clients, properties, and quotes to SQL Server is pending the persistence slice.
 
 ## Validation Requirements
 
