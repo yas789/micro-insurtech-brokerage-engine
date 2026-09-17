@@ -2,7 +2,7 @@
 
 Project scaffold for a production-oriented vertical slice that models the technical infrastructure of an independent commercial property insurance broker.
 
-The repository currently contains documentation, layer folders, SQL schema, core quote contracts, and underwriter scheme calculations. Full API orchestration, persistence wiring, PHP forwarding, and frontend quote flow are still pending.
+The repository currently contains documentation, layer folders, SQL schema, core quote contracts, underwriter scheme calculations, and the first quote API endpoint. Database persistence wiring, PHP forwarding, and frontend quote flow are still pending.
 
 ## Purpose
 
@@ -43,6 +43,7 @@ micro-insurtech-brokerage-engine/
   core-engine-tests/
     MicroInsurTech.CoreEngine.Tests.csproj
     Schemes/
+    Services/
   docs/
     architecture.md
     specification.md
@@ -82,4 +83,4 @@ The browser must not call the .NET core engine directly. The PHP gateway owns br
 
 ## Current Status
 
-Foundation slice implemented: SQL schema, C# DTOs, `IUnderwriterService`, three underwriter schemes, and scheme unit tests. API endpoint orchestration and database persistence code are pending.
+Core API slice implemented: SQL schema, C# DTOs, `IUnderwriterService`, three underwriter schemes, `POST /api/quotes`, postcode region lookup, concurrent quote orchestration, and unit tests. Database persistence code is pending.

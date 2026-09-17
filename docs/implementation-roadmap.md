@@ -46,11 +46,13 @@ Completed:
 - `IUnderwriterService` interface.
 - Pure underwriter scheme implementations.
 - Unit tests for scheme base and multiplier cases.
+- `POST /api/quotes` controller endpoint.
+- Postcode enrichment client using `HttpClient`.
+- Quote orchestration service that runs underwriter schemes concurrently and returns quotes sorted by premium.
+- Unit tests for quote orchestration behavior.
 
 Remaining:
 
-- Quote controller endpoint.
-- Postcode enrichment client.
 - Database persistence.
 
 Acceptance criteria:

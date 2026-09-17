@@ -1,6 +1,6 @@
 # Setup Guide
 
-This document describes the planned setup model. No runnable application code exists yet.
+This document describes the planned setup model. The .NET core engine has a health endpoint and quote API; PHP and frontend layers are still scaffolded.
 
 ## Local Development Topology
 
@@ -28,6 +28,19 @@ ASPNETCORE_ENVIRONMENT=Development
 ConnectionStrings__BrokerDatabase=Server=localhost,1433;Database=MicroInsurTech;User Id=sa;Password=<password>;TrustServerCertificate=True;
 POSTCODES_API_BASE_URL=https://postcodes.io
 ```
+
+## Core Engine Local Run
+
+From the repository root:
+
+```text
+dotnet run --project core-engine/MicroInsurTech.CoreEngine.csproj
+```
+
+Useful endpoints:
+
+- `GET /health`
+- `POST /api/quotes`
 
 ### Azure Deployment
 
