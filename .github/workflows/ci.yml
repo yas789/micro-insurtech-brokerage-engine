@@ -36,6 +36,9 @@ jobs:
       - name: Build
         run: dotnet build core-engine/MicroInsurTech.CoreEngine.csproj --configuration Release --no-restore
 
+      - name: Test
+        run: dotnet test core-engine-tests/MicroInsurTech.CoreEngine.Tests.csproj --configuration Release --no-restore --verbosity normal
+
   php:
     name: PHP Validation
     runs-on: ubuntu-latest
