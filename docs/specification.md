@@ -16,6 +16,12 @@ Fields:
 - `Email`: Required bounded text, indexed candidate.
 - `CreatedAt`: UTC creation timestamp.
 
+Implemented constraints:
+
+- `ClientID` is an identity primary key.
+- Name and email fields must not be blank.
+- `Email` has a supporting index.
+
 ### Properties
 
 Fields:
@@ -27,6 +33,14 @@ Fields:
 - `RebuildCost`: Required `DECIMAL(10,2)`.
 - `IsUnoccupied`: Required boolean or bit.
 
+Implemented constraints:
+
+- `PropertyID` is an identity primary key.
+- `ClientID` is a foreign key to `Clients.ClientID`.
+- `Postcode` must not be blank.
+- `YearBuilt` must be between `1500` and `2100`.
+- `RebuildCost` must be positive.
+
 ### Quotes
 
 Fields:
@@ -37,6 +51,14 @@ Fields:
 - `PremiumAmount`: Required `DECIMAL(10,2)`.
 - `RiskRating`: Required bounded text or numeric score depending on implementation decision.
 - `GeneratedAt`: UTC creation timestamp.
+
+Implemented constraints:
+
+- `QuoteID` is an identity primary key.
+- `PropertyID` is a foreign key to `Properties.PropertyID`.
+- `UnderwriterName` must not be blank.
+- `PremiumAmount` must be positive.
+- `RiskRating` must be `Low`, `Medium`, or `High`.
 
 ## Underwriting Contract
 
@@ -57,6 +79,7 @@ Rules:
 
 - Base premium: GBP 150.00.
 - Risk multiplier: `1.4` when `YearBuilt < 1920`.
+- Risk rating: `Medium` when multiplier applies, otherwise `Low`.
 
 ### AXAScheme
 
@@ -64,6 +87,7 @@ Rules:
 
 - Base premium: GBP 180.00.
 - Risk multiplier: `1.5` when `IsUnoccupied` is true.
+- Risk rating: `High` when multiplier applies, otherwise `Low`.
 
 ### NichePropertyCover
 
@@ -71,6 +95,7 @@ Rules:
 
 - Base premium: GBP 120.00.
 - Risk multiplier: `1.3` when `RebuildCost > 500000.00`.
+- Risk rating: `Medium` when multiplier applies, otherwise `Low`.
 
 ## External API Integration
 

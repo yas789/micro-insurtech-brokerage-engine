@@ -13,6 +13,8 @@ Deliverables:
 
 ## Phase 1: Data Layer
 
+Status: Complete.
+
 Deliverables:
 
 - `database/schema.sql`
@@ -27,11 +29,26 @@ Acceptance criteria:
 
 ## Phase 2: Core Engine
 
+Status: Partially complete.
+
 Deliverables:
 
 - .NET 8 Web API project.
 - `IUnderwriterService` interface.
 - `AvivaScheme`, `AXAScheme`, and `NichePropertyCover` implementations.
+- Quote controller endpoint.
+- Postcode enrichment client.
+- Database persistence.
+
+Completed:
+
+- DTO contracts for quote requests, client details, property evaluation, and quote results.
+- `IUnderwriterService` interface.
+- Pure underwriter scheme implementations.
+- Unit tests for scheme base and multiplier cases.
+
+Remaining:
+
 - Quote controller endpoint.
 - Postcode enrichment client.
 - Database persistence.
