@@ -1,0 +1,2 @@
+-- Placeholder schema file.
+-- The SQL Server database definition will be implemented in the data-layer phase.

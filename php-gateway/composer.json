@@ -1,0 +1,13 @@
+{
+  "name": "micro-insurtech/php-gateway",
+  "description": "PHP gateway layer for the Micro-InsurTech Brokerage Engine.",
+  "type": "project",
+  "require": {
+    "php": "^8.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "MicroInsurTech\\Gateway\\": "src/"
+    }
+  }
+}

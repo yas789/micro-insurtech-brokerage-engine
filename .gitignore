@@ -1,0 +1,28 @@
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+
+# PHP
+vendor/
+composer.lock
+
+# Frontend
+node_modules/
+dist/
+build/
+
+# Logs
+*.log
+logs/
