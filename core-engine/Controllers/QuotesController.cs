@@ -36,19 +36,32 @@ public sealed class QuotesController(IQuoteOrchestrationService quoteOrchestrati
             return errors;
         }
 
-        if (string.IsNullOrWhiteSpace(request.Client.FirstName))
+        if (request.Client is null)
         {
-            errors.Add("Client first name is required.");
+            errors.Add("Client details are required.");
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(request.Client.FirstName))
+            {
+                errors.Add("Client first name is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Client.LastName))
+            {
+                errors.Add("Client last name is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Client.Email) || !request.Client.Email.Contains('@', StringComparison.Ordinal))
+            {
+                errors.Add("A valid client email is required.");
+            }
         }
 
-        if (string.IsNullOrWhiteSpace(request.Client.LastName))
+        if (request.Property is null)
         {
-            errors.Add("Client last name is required.");
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Client.Email) || !request.Client.Email.Contains('@', StringComparison.Ordinal))
-        {
-            errors.Add("A valid client email is required.");
+            errors.Add("Property details are required.");
+            return errors;
         }
 
         if (string.IsNullOrWhiteSpace(request.Property.Postcode))

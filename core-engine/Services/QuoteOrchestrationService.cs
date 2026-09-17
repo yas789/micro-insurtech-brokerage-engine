@@ -8,6 +8,11 @@ public sealed class QuoteOrchestrationService(
 {
     public async Task<QuoteResponse> GenerateQuotesAsync(QuoteRequest request, CancellationToken cancellationToken)
     {
+        if (request.Property is null)
+        {
+            throw new ArgumentException("Property details are required.", nameof(request));
+        }
+
         var region = await postcodeLookupService.GetRegionAsync(request.Property.Postcode, cancellationToken);
         var enrichedProperty = request.Property with { Region = region };
 
