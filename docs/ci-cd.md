@@ -8,12 +8,20 @@ The repository is scaffolded. CI should validate the files that exist today and 
 
 The PR workflow runs for pull requests into `dev` and `main`.
 
+Expected workflow:
+
+- Feature branches target `dev`.
+- `dev` to `main` PRs are release/deployment PRs.
+- CI must pass before either PR type is merged.
+- Production deployment is reviewed through the `dev` to `main` PR.
+
 Current checks:
 
 - Restore and build the .NET core engine.
 - Validate required documentation files exist.
 - Validate PHP file syntax when PHP is available in CI.
 - Validate PHP Composer metadata.
+- Composer validation runs in strict mode, so `php-gateway/composer.json` must include required metadata such as `license`.
 
 Future checks:
 
@@ -26,6 +34,8 @@ Future checks:
 ## Production Deployment
 
 Production deployment must be triggered only from `main`.
+
+Deployment changes should not be pushed directly to `main`; they must arrive through a reviewed `dev` to `main` PR.
 
 Initial deployment workflow is intentionally a placeholder until Azure targets are created. It should later deploy:
 
