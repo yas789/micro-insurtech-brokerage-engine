@@ -20,16 +20,21 @@
 ## Current Project Shape
 
 - `core-engine/` is a .NET 8 Web API scaffold; current executable entrypoint is `core-engine/Program.cs`.
+- `core-engine/Dtos/` contains the quote request/response contracts used by scheme services.
+- `core-engine/Schemes/` contains pure underwriter calculations; keep HTTP and database access out of these classes.
 - `php-gateway/` is a PHP 8.1+ gateway scaffold using PSR-4 namespace `MicroInsurTech\Gateway\` mapped to `src/`.
 - `frontend/` is a plain HTML/CSS/JavaScript scaffold; no package manager is configured yet.
-- `database/schema.sql` is still a placeholder; SQL Server schema has not been implemented.
-- Business logic is intentionally minimal at this stage.
+- `database/schema.sql` contains the SQL Server schema for `Clients`, `Properties`, and `Quotes`.
+- `core-engine-tests/` contains xUnit tests for underwriter scheme calculations.
 
 ## Verified Commands
 
 - Build the .NET scaffold from repo root: `dotnet build core-engine/MicroInsurTech.CoreEngine.csproj`.
+- Build the test project from repo root: `dotnet build core-engine-tests/MicroInsurTech.CoreEngine.Tests.csproj`.
+- Run tests when .NET 8 runtime is installed: `dotnet test core-engine-tests/MicroInsurTech.CoreEngine.Tests.csproj`.
+- Current local environment has .NET 9 SDK/runtime only; `dotnet test` may fail locally for net8.0 even when CI passes with `actions/setup-dotnet@v4`.
 - PHP is not guaranteed on local PATH in the current environment; do not claim PHP checks passed unless you run them.
-- No test projects or frontend package scripts exist yet.
+- No frontend package scripts exist yet.
 
 ## Configuration Notes
 

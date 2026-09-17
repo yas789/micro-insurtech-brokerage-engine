@@ -33,8 +33,17 @@ jobs:
       - name: Restore
         run: dotnet restore core-engine/MicroInsurTech.CoreEngine.csproj
 
+      - name: Restore tests
+        run: dotnet restore core-engine-tests/MicroInsurTech.CoreEngine.Tests.csproj
+
       - name: Build
         run: dotnet build core-engine/MicroInsurTech.CoreEngine.csproj --configuration Release --no-restore
+
+      - name: Build tests
+        run: dotnet build core-engine-tests/MicroInsurTech.CoreEngine.Tests.csproj --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test core-engine-tests/MicroInsurTech.CoreEngine.Tests.csproj --configuration Release --no-build --verbosity normal
 
   php:
     name: PHP Validation
