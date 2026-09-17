@@ -10,9 +10,12 @@
 
 - `main` is production only.
 - `dev` is the integration branch for development.
-- Open PRs from feature branches into `dev`.
-- Open PRs from `dev` into `main` for production deployment.
+- Start implementation work from `dev` on a `feature/<short-name>` branch.
+- Open a PR from the feature branch into `dev` when the change is complete.
+- Review the feature PR before merging; include verification results in the PR body.
+- Open a separate PR from `dev` into `main` for production deployment and user review.
 - Do not push implementation changes directly to `main`.
+- Keep documentation updated in the same feature PR as the code or workflow change.
 
 ## Current Project Shape
 
