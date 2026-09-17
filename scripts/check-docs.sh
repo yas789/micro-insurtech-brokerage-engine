@@ -10,6 +10,7 @@ docs/setup.md
 docs/implementation-roadmap.md
 docs/branching-strategy.md
 docs/ci-cd.md
+docs/core-orchestration-natural-language.md
 "
 
 for file in $required_files; do

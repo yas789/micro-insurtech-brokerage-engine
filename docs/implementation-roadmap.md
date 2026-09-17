@@ -50,6 +50,7 @@ Completed:
 - Postcode enrichment client using `HttpClient`.
 - Quote orchestration service that runs underwriter schemes concurrently and returns quotes sorted by premium.
 - Unit tests for quote orchestration behavior.
+- Natural-language orchestration notes in `docs/core-orchestration-natural-language.md`.
 
 Remaining:
 
