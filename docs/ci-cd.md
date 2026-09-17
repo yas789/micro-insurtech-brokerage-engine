@@ -21,6 +21,7 @@ Current checks:
 - Validate required documentation files exist.
 - Validate PHP file syntax when PHP is available in CI.
 - Validate PHP Composer metadata.
+- Composer validation runs in strict mode, so `php-gateway/composer.json` must include required metadata such as `license`.
 
 Future checks:
 
