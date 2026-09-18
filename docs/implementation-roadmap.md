@@ -29,7 +29,7 @@ Acceptance criteria:
 
 ## Phase 2: Core Engine
 
-Status: Partially complete.
+Status: Complete.
 
 Deliverables:
 
@@ -51,10 +51,12 @@ Completed:
 - Quote orchestration service that runs underwriter schemes concurrently and returns quotes sorted by premium.
 - Unit tests for quote orchestration behavior.
 - Natural-language orchestration notes in `docs/core-orchestration-natural-language.md`.
+- EF Core SQL Server persistence for clients, properties, and generated quotes.
+- Persistence tests using EF Core InMemory provider.
 
 Remaining:
 
-- Database persistence.
+- None for the current core engine slice.
 
 Acceptance criteria:
 
