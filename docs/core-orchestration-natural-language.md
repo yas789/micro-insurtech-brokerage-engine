@@ -22,6 +22,7 @@ When `POST /api/quotes` receives a request:
    - If rebuild cost is zero or negative, record `Property rebuild cost must be greater than zero.`.
 7. If any errors were recorded, return HTTP `400 Bad Request` with those errors.
 8. If no errors were recorded, pass the request to the quote orchestration service.
+9. Persist the client, property, and returned quote rows before returning a successful response.
 
 ## Quote Orchestration Flow
 
@@ -37,6 +38,20 @@ When a valid quote request reaches the orchestration service:
 6. Sort the returned quotes by `PremiumAmount` from lowest to highest.
 7. If two quotes have the same premium, sort those quotes by `UnderwriterName` for deterministic output.
 8. Return a `QuoteResponse` containing the sorted quotes.
+
+## Persistence Flow
+
+Source: `core-engine/Services/QuotePersistenceService.cs`
+
+After quote orchestration succeeds:
+
+1. Confirm client and property details are present. If not, throw an argument error because the controller should have already rejected the request.
+2. Open a database transaction when the database provider supports transactions.
+3. Save the client details.
+4. Save the property details and link them to the saved client.
+5. Save each returned underwriter quote and link it to the saved property.
+6. Commit the transaction.
+7. If saving fails, the API request fails instead of returning unsaved quotes.
 
 ## Postcode Lookup Flow
 

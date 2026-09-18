@@ -1,6 +1,6 @@
 # Setup Guide
 
-This document describes the planned setup model. The .NET core engine has a health endpoint and quote API; PHP and frontend layers are still scaffolded.
+This document describes the planned setup model. The .NET core engine has a health endpoint, quote API, postcode enrichment, and SQL persistence; PHP and frontend layers are still scaffolded.
 
 ## Local Development Topology
 
@@ -30,6 +30,8 @@ POSTCODES_API_BASE_URL=https://postcodes.io
 ```
 
 ## Core Engine Local Run
+
+Apply `database/schema.sql` to SQL Server first, then provide `ConnectionStrings__BrokerDatabase` before sending quote requests. The API starts only when the `BrokerDatabase` connection string is configured.
 
 From the repository root:
 

@@ -62,7 +62,7 @@ Technology constraints:
   - `AvivaScheme`
   - `AXAScheme`
   - `NichePropertyCover`
-- Entity Framework Core, Dapper, or a lightweight repository pattern.
+- Entity Framework Core using SQL Server provider.
 
 ### 4. Data Persistence Layer
 
@@ -77,6 +77,7 @@ Responsibilities:
 Technology constraints:
 
 - SQL Server or Azure SQL.
+- Entity Framework Core maps the application model to the SQL schema.
 - Explicit primary keys.
 - Identity constraints.
 - Explicit foreign keys.
