@@ -6,7 +6,9 @@ namespace MicroInsurTech.CoreEngine.Controllers;
 
 [ApiController]
 [Route("api/quotes")]
-public sealed class QuotesController(IQuoteOrchestrationService quoteOrchestrationService) : ControllerBase
+public sealed class QuotesController(
+    IQuoteOrchestrationService quoteOrchestrationService,
+    IQuotePersistenceService quotePersistenceService) : ControllerBase
 {
     [HttpPost]
     [ProducesResponseType(typeof(QuoteResponse), StatusCodes.Status200OK)]
@@ -23,6 +25,8 @@ public sealed class QuotesController(IQuoteOrchestrationService quoteOrchestrati
         }
 
         var response = await quoteOrchestrationService.GenerateQuotesAsync(request, cancellationToken);
+        await quotePersistenceService.SaveQuoteRequestAsync(request, response, cancellationToken);
+
         return Ok(response);
     }
 

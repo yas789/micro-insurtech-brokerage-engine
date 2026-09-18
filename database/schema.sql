@@ -28,6 +28,7 @@ CREATE TABLE dbo.Properties
     PropertyID INT IDENTITY(1,1) NOT NULL,
     ClientID INT NOT NULL,
     Postcode VARCHAR(16) NOT NULL,
+    Region VARCHAR(100) NULL,
     YearBuilt INT NOT NULL,
     RebuildCost DECIMAL(10,2) NOT NULL,
     IsUnoccupied BIT NOT NULL,
@@ -47,6 +48,7 @@ CREATE TABLE dbo.Quotes
     UnderwriterName VARCHAR(100) NOT NULL,
     PremiumAmount DECIMAL(10,2) NOT NULL,
     RiskRating VARCHAR(20) NOT NULL,
+    Region VARCHAR(100) NULL,
     GeneratedAt DATETIME2(0) NOT NULL CONSTRAINT DF_Quotes_GeneratedAt DEFAULT SYSUTCDATETIME(),
 
     CONSTRAINT PK_Quotes PRIMARY KEY CLUSTERED (QuoteID),
