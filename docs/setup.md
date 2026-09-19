@@ -32,6 +32,7 @@ POSTCODES_API_BASE_URL=https://postcodes.io
 ## Core Engine Local Run
 
 Apply `database/schema.sql` to SQL Server first, then provide `ConnectionStrings__BrokerDatabase` before sending quote requests. The API starts only when the `BrokerDatabase` connection string is configured.
+See `docs/database-persistence.md` for the exact records written by a valid quote request.
 
 From the repository root:
 
