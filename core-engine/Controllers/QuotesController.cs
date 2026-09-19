@@ -10,6 +10,11 @@ public sealed class QuotesController(
     IQuoteOrchestrationService quoteOrchestrationService,
     IQuotePersistenceService quotePersistenceService) : ControllerBase
 {
+    private const int MaxClientFirstNameLength = 100;
+    private const int MaxClientLastNameLength = 100;
+    private const int MaxClientEmailLength = 254;
+    private const int MaxPropertyPostcodeLength = 16;
+
     [HttpPost]
     [ProducesResponseType(typeof(QuoteResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -50,15 +55,27 @@ public sealed class QuotesController(
             {
                 errors.Add("Client first name is required.");
             }
+            else if (request.Client.FirstName.Trim().Length > MaxClientFirstNameLength)
+            {
+                errors.Add("Client first name must be 100 characters or fewer.");
+            }
 
             if (string.IsNullOrWhiteSpace(request.Client.LastName))
             {
                 errors.Add("Client last name is required.");
             }
+            else if (request.Client.LastName.Trim().Length > MaxClientLastNameLength)
+            {
+                errors.Add("Client last name must be 100 characters or fewer.");
+            }
 
             if (string.IsNullOrWhiteSpace(request.Client.Email) || !request.Client.Email.Contains('@', StringComparison.Ordinal))
             {
                 errors.Add("A valid client email is required.");
+            }
+            else if (request.Client.Email.Trim().Length > MaxClientEmailLength)
+            {
+                errors.Add("Client email must be 254 characters or fewer.");
             }
         }
 
@@ -71,6 +88,10 @@ public sealed class QuotesController(
         if (string.IsNullOrWhiteSpace(request.Property.Postcode))
         {
             errors.Add("Property postcode is required.");
+        }
+        else if (request.Property.Postcode.Trim().Length > MaxPropertyPostcodeLength)
+        {
+            errors.Add("Property postcode must be 16 characters or fewer.");
         }
 
         if (request.Property.YearBuilt is < 1500 or > 2100)
