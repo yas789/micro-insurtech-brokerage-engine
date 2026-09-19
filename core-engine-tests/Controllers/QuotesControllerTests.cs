@@ -15,6 +15,7 @@ public sealed class QuotesControllerTests
     private const int ValidYearBuilt = 1910;
     private const decimal ValidRebuildCost = 750000.00m;
     private const string ValidRegion = "London";
+    private const string ValidRiskRating = "Low";
 
     [Fact]
     public async Task GenerateQuoteAsync_ReturnsBadRequestWhenClientIsMissing()
@@ -74,7 +75,7 @@ public sealed class QuotesControllerTests
     {
         var expectedResponse = new QuoteResponse(new[]
         {
-            new QuoteResult("Test", 100.00m, "Low", ValidRegion),
+            new QuoteResult("Test", 100.00m, ValidRiskRating, ValidRegion),
         });
         var persistenceService = new StubQuotePersistenceService();
         var controller = new QuotesController(new StubQuoteOrchestrationService(expectedResponse), persistenceService);
