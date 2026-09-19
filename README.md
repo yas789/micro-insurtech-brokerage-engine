@@ -49,6 +49,7 @@ micro-insurtech-brokerage-engine/
     specification.md
     setup.md
     implementation-roadmap.md
+    database-persistence.md
 ```
 
 ## Layer Communication
