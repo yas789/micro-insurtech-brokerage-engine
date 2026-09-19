@@ -13,11 +13,15 @@ When `POST /api/quotes` receives a request:
 3. If the client payload is missing, record `Client details are required.`.
 4. If the client payload exists, validate the client's fields:
    - If first name is blank or missing, record `Client first name is required.`.
+   - If first name is longer than `100` characters after trimming, record `Client first name must be 100 characters or fewer.`.
    - If last name is blank or missing, record `Client last name is required.`.
+   - If last name is longer than `100` characters after trimming, record `Client last name must be 100 characters or fewer.`.
    - If email is blank, missing, or does not contain `@`, record `A valid client email is required.`.
+   - If email is longer than `254` characters after trimming, record `Client email must be 254 characters or fewer.`.
 5. If the property payload is missing, record `Property details are required.` and stop validation immediately.
 6. If the property payload exists, validate the property fields:
    - If postcode is blank or missing, record `Property postcode is required.`.
+   - If postcode is longer than `16` characters after trimming, record `Property postcode must be 16 characters or fewer.`.
    - If year built is before `1500` or after `2100`, record `Property year built must be between 1500 and 2100.`.
    - If rebuild cost is zero or negative, record `Property rebuild cost must be greater than zero.`.
 7. If any errors were recorded, return HTTP `400 Bad Request` with those errors.
