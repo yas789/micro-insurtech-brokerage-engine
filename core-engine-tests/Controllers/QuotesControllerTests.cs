@@ -8,6 +8,11 @@ namespace MicroInsurTech.CoreEngine.Tests.Controllers;
 
 public sealed class QuotesControllerTests
 {
+    private const string ValidFirstName = "Jane";
+    private const string ValidLastName = "Broker";
+    private const string ValidEmail = "jane@example.com";
+    private const string ValidPostcode = "SW1A 1AA";
+
     [Fact]
     public async Task GenerateQuoteAsync_ReturnsBadRequestWhenClientIsMissing()
     {
@@ -32,7 +37,7 @@ public sealed class QuotesControllerTests
         var persistenceService = new StubQuotePersistenceService();
         var controller = new QuotesController(orchestrationService, persistenceService);
         var request = new QuoteRequest(
-            new ClientDto("Jane", "Broker", "jane@example.com"),
+            new ClientDto(ValidFirstName, ValidLastName, ValidEmail),
             null);
 
         var result = await controller.GenerateQuoteAsync(request, CancellationToken.None);
@@ -71,8 +76,8 @@ public sealed class QuotesControllerTests
         var persistenceService = new StubQuotePersistenceService();
         var controller = new QuotesController(new StubQuoteOrchestrationService(expectedResponse), persistenceService);
         var request = new QuoteRequest(
-            new ClientDto("Jane", "Broker", "jane@example.com"),
-            new PropertyEvaluationDto("SW1A 1AA", 1910, 750000.00m, false));
+            new ClientDto(ValidFirstName, ValidLastName, ValidEmail),
+            new PropertyEvaluationDto(ValidPostcode, 1910, 750000.00m, false));
 
         var result = await controller.GenerateQuoteAsync(request, CancellationToken.None);
 
@@ -105,10 +110,10 @@ public sealed class QuotesControllerTests
     }
 
     private static QuoteRequest CreateRequest(
-        string firstName = "Jane",
-        string lastName = "Broker",
-        string email = "jane@example.com",
-        string postcode = "SW1A 1AA")
+        string firstName = ValidFirstName,
+        string lastName = ValidLastName,
+        string email = ValidEmail,
+        string postcode = ValidPostcode)
     {
         return new QuoteRequest(
             new ClientDto(firstName, lastName, email),
