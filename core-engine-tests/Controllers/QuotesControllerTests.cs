@@ -12,6 +12,8 @@ public sealed class QuotesControllerTests
     private const string ValidLastName = "Broker";
     private const string ValidEmail = "jane@example.com";
     private const string ValidPostcode = "SW1A 1AA";
+    private const int ValidYearBuilt = 1910;
+    private const decimal ValidRebuildCost = 750000.00m;
 
     [Fact]
     public async Task GenerateQuoteAsync_ReturnsBadRequestWhenClientIsMissing()
@@ -21,7 +23,7 @@ public sealed class QuotesControllerTests
         var controller = new QuotesController(orchestrationService, persistenceService);
         var request = new QuoteRequest(
             null,
-            new PropertyEvaluationDto("SW1A 1AA", 1910, 750000.00m, false));
+            new PropertyEvaluationDto(ValidPostcode, ValidYearBuilt, ValidRebuildCost, false));
 
         var result = await controller.GenerateQuoteAsync(request, CancellationToken.None);
 
@@ -77,7 +79,7 @@ public sealed class QuotesControllerTests
         var controller = new QuotesController(new StubQuoteOrchestrationService(expectedResponse), persistenceService);
         var request = new QuoteRequest(
             new ClientDto(ValidFirstName, ValidLastName, ValidEmail),
-            new PropertyEvaluationDto(ValidPostcode, 1910, 750000.00m, false));
+            new PropertyEvaluationDto(ValidPostcode, ValidYearBuilt, ValidRebuildCost, false));
 
         var result = await controller.GenerateQuoteAsync(request, CancellationToken.None);
 
@@ -117,7 +119,7 @@ public sealed class QuotesControllerTests
     {
         return new QuoteRequest(
             new ClientDto(firstName, lastName, email),
-            new PropertyEvaluationDto(postcode, 1910, 750000.00m, false));
+            new PropertyEvaluationDto(postcode, ValidYearBuilt, ValidRebuildCost, false));
     }
 
     private sealed class StubQuotePersistenceService : IQuotePersistenceService
