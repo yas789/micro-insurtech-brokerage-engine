@@ -2,6 +2,8 @@
 
 The core engine persists every valid quote request after quote calculation and before returning the API response.
 
+The API validates SQL-backed request limits before quote calculation, so over-limit client or property values return `400 Bad Request` instead of failing during database persistence.
+
 ## Save Flow
 
 When `POST /api/quotes` receives a valid request:
@@ -23,9 +25,9 @@ If persistence fails, the API request fails instead of returning quotes that wer
 
 Stores normalized client identity fields:
 
-- `FirstName`
-- `LastName`
-- `Email`
+- `FirstName`, maximum `100` characters.
+- `LastName`, maximum `100` characters.
+- `Email`, maximum `254` characters.
 - `CreatedAt`
 
 ### `Properties`
@@ -33,7 +35,7 @@ Stores normalized client identity fields:
 Stores the submitted property details and the resolved postcode region when available:
 
 - `ClientID`
-- `Postcode`
+- `Postcode`, maximum `16` characters.
 - `Region`
 - `YearBuilt`
 - `RebuildCost`
