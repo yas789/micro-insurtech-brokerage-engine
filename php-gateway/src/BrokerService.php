@@ -9,6 +9,7 @@ final class BrokerService
     public function __construct(
         private readonly string $coreApiBaseUrl,
         private readonly int $timeoutSeconds = 15,
+        private readonly ?HttpClient $httpClient = null,
     ) {
     }
 
@@ -25,46 +26,28 @@ final class BrokerService
             return $this->gatewayError('Quote request could not be encoded.', 500);
         }
 
-        $handle = curl_init($url);
+        $client = $this->httpClient ?? new CurlHttpClient();
+        $response = $client->postJson($url, $encodedPayload, [
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ], $this->timeoutSeconds);
 
-        if ($handle === false) {
-            return $this->gatewayError('Gateway HTTP client could not be initialized.', 500);
+        if ($response->error !== null) {
+            return $this->gatewayError('Core engine is unavailable.', 502, $response->error);
         }
 
-        curl_setopt_array($handle, [
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $encodedPayload,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HEADER => false,
-            CURLOPT_TIMEOUT => $this->timeoutSeconds,
-            CURLOPT_HTTPHEADER => [
-                'Accept: application/json',
-                'Content-Type: application/json',
-            ],
-        ]);
-
-        $rawResponse = curl_exec($handle);
-        $curlError = curl_error($handle);
-        $statusCode = (int) curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
-
-        curl_close($handle);
-
-        if ($rawResponse === false) {
-            return $this->gatewayError('Core engine is unavailable.', 502, $curlError);
-        }
-
-        $decodedResponse = json_decode($rawResponse, true);
+        $decodedResponse = json_decode($response->body, true);
 
         if (!is_array($decodedResponse)) {
             return $this->gatewayError('Core engine returned an invalid response.', 502);
         }
 
-        if ($statusCode >= 500) {
+        if ($response->statusCode >= 500) {
             return $this->gatewayError('Core engine failed to generate quotes.', 502);
         }
 
         return [
-            'statusCode' => $statusCode > 0 ? $statusCode : 502,
+            'statusCode' => $response->statusCode > 0 ? $response->statusCode : 502,
             'body' => $decodedResponse,
         ];
     }

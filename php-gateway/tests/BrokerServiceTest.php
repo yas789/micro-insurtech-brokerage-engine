@@ -1,0 +1,136 @@
+<?php
+
+declare(strict_types=1);
+
+namespace MicroInsurTech\Gateway\Tests;
+
+use MicroInsurTech\Gateway\BrokerService;
+use MicroInsurTech\Gateway\HttpClient;
+use MicroInsurTech\Gateway\HttpResponse;
+use PHPUnit\Framework\TestCase;
+
+final class BrokerServiceTest extends TestCase
+{
+    public function testRequestQuotesPostsJsonToCoreApi(): void
+    {
+        $httpClient = new CapturingHttpClient(new HttpResponse(200, '{"quotes":[]}'));
+        $service = new BrokerService('http://core-engine.local/', 7, $httpClient);
+        $payload = $this->validPayload();
+
+        $result = $service->requestQuotes($payload);
+
+        self::assertSame(200, $result['statusCode']);
+        self::assertSame(['quotes' => []], $result['body']);
+        self::assertSame('http://core-engine.local/api/quotes', $httpClient->url);
+        self::assertSame(7, $httpClient->timeoutSeconds);
+        self::assertSame('application/json', $httpClient->headers['Accept']);
+        self::assertSame('application/json', $httpClient->headers['Content-Type']);
+        self::assertSame($payload, json_decode($httpClient->json, true));
+    }
+
+    public function testRequestQuotesReturnsUpstreamValidationResponse(): void
+    {
+        $httpClient = new CapturingHttpClient(new HttpResponse(400, '{"errors":["Invalid risk"]}'));
+        $service = new BrokerService('http://core-engine.local', 15, $httpClient);
+
+        $result = $service->requestQuotes($this->validPayload());
+
+        self::assertSame(400, $result['statusCode']);
+        self::assertSame(['errors' => ['Invalid risk']], $result['body']);
+    }
+
+    public function testRequestQuotesConvertsUpstreamServerErrorToSafeGatewayError(): void
+    {
+        $httpClient = new CapturingHttpClient(new HttpResponse(500, '{"error":"database password leaked"}'));
+        $service = new BrokerService('http://core-engine.local', 15, $httpClient);
+
+        $result = $service->requestQuotes($this->validPayload());
+
+        self::assertSame(502, $result['statusCode']);
+        self::assertSame(['error' => 'Core engine failed to generate quotes.'], $result['body']);
+    }
+
+    public function testRequestQuotesConvertsNetworkFailureToSafeGatewayError(): void
+    {
+        putenv('APP_ENV=production');
+        $httpClient = new CapturingHttpClient(new HttpResponse(0, '', 'Connection refused'));
+        $service = new BrokerService('http://core-engine.local', 15, $httpClient);
+
+        $result = $service->requestQuotes($this->validPayload());
+
+        self::assertSame(502, $result['statusCode']);
+        self::assertSame(['error' => 'Core engine is unavailable.'], $result['body']);
+    }
+
+    public function testRequestQuotesIncludesNetworkFailureDetailInLocalEnvironment(): void
+    {
+        putenv('APP_ENV=local');
+        $httpClient = new CapturingHttpClient(new HttpResponse(0, '', 'Connection refused'));
+        $service = new BrokerService('http://core-engine.local', 15, $httpClient);
+
+        $result = $service->requestQuotes($this->validPayload());
+
+        self::assertSame(502, $result['statusCode']);
+        self::assertSame([
+            'error' => 'Core engine is unavailable.',
+            'detail' => 'Connection refused',
+        ], $result['body']);
+    }
+
+    public function testRequestQuotesConvertsInvalidJsonToGatewayError(): void
+    {
+        $httpClient = new CapturingHttpClient(new HttpResponse(200, 'not-json'));
+        $service = new BrokerService('http://core-engine.local', 15, $httpClient);
+
+        $result = $service->requestQuotes($this->validPayload());
+
+        self::assertSame(502, $result['statusCode']);
+        self::assertSame(['error' => 'Core engine returned an invalid response.'], $result['body']);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validPayload(): array
+    {
+        return [
+            'client' => [
+                'firstName' => 'Jane',
+                'lastName' => 'Broker',
+                'email' => 'jane@example.com',
+            ],
+            'property' => [
+                'postcode' => 'SW1A 1AA',
+                'yearBuilt' => 1910,
+                'rebuildCost' => 750000.00,
+                'isUnoccupied' => false,
+            ],
+        ];
+    }
+}
+
+final class CapturingHttpClient implements HttpClient
+{
+    public string $url = '';
+
+    public string $json = '';
+
+    /** @var array<string, string> */
+    public array $headers = [];
+
+    public int $timeoutSeconds = 0;
+
+    public function __construct(private readonly HttpResponse $response)
+    {
+    }
+
+    public function postJson(string $url, string $json, array $headers, int $timeoutSeconds): HttpResponse
+    {
+        $this->url = $url;
+        $this->json = $json;
+        $this->headers = $headers;
+        $this->timeoutSeconds = $timeoutSeconds;
+
+        return $this->response;
+    }
+}
