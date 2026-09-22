@@ -3,16 +3,26 @@ const submitButton = document.querySelector('#submit-button');
 const statusMessage = document.querySelector('#form-status');
 const results = document.querySelector('#quote-results');
 
-form.addEventListener('submit', async (event) => {
+if (form && submitButton && statusMessage && results) {
+  bindQuoteForm(form, submitButton, statusMessage, results);
+}
+
+export function bindQuoteForm(formElement, buttonElement, statusElement, resultsElement, fetchQuotes = fetch) {
+  formElement.addEventListener('submit', async (event) => {
+    await handleQuoteSubmit(event, formElement, buttonElement, statusElement, resultsElement, fetchQuotes);
+  });
+}
+
+export async function handleQuoteSubmit(event, formElement, buttonElement, statusElement, resultsElement, fetchQuotes = fetch) {
   event.preventDefault();
 
-  const payload = buildQuotePayload(new FormData(form));
-  setLoading(true);
-  setStatus('Requesting quotes from underwriters...');
-  renderEmptyState('Quote request is being processed.');
+  const payload = buildQuotePayload(new FormData(formElement));
+  setLoading(buttonElement, true);
+  setStatus(statusElement, 'Requesting quotes from underwriters...');
+  renderEmptyState(resultsElement, 'Quote request is being processed.');
 
   try {
-    const response = await fetch('/api/quotes', {
+    const response = await fetchQuotes('/api/quotes', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -26,17 +36,17 @@ form.addEventListener('submit', async (event) => {
       throw new Error(formatError(body));
     }
 
-    renderQuotes(body.quotes || []);
-    setStatus('Quotes returned in premium order.');
+    renderQuotes(resultsElement, body.quotes || []);
+    setStatus(statusElement, 'Quotes returned in premium order.');
   } catch (error) {
-    renderEmptyState('No quotes to display yet.');
-    setStatus(error instanceof Error ? error.message : 'Quote request failed.', true);
+    renderEmptyState(resultsElement, 'No quotes to display yet.');
+    setStatus(statusElement, error instanceof Error ? error.message : 'Quote request failed.', true);
   } finally {
-    setLoading(false);
+    setLoading(buttonElement, false);
   }
-});
+}
 
-function buildQuotePayload(formData) {
+export function buildQuotePayload(formData) {
   return {
     client: {
       firstName: String(formData.get('firstName') || '').trim(),
@@ -52,14 +62,14 @@ function buildQuotePayload(formData) {
   };
 }
 
-function renderQuotes(quotes) {
+export function renderQuotes(resultsElement, quotes) {
   if (!Array.isArray(quotes) || quotes.length === 0) {
-    renderEmptyState('No underwriters returned a quote for this risk.');
+    renderEmptyState(resultsElement, 'No underwriters returned a quote for this risk.');
     return;
   }
 
-  results.className = 'quote-grid';
-  results.innerHTML = '';
+  resultsElement.className = 'quote-grid';
+  resultsElement.innerHTML = '';
 
   quotes.forEach((quote, index) => {
     const card = document.createElement('article');
@@ -82,33 +92,33 @@ function renderQuotes(quotes) {
       <button type="button" class="accept-button">Accept Cover</button>
     `;
 
-    results.append(card);
+    resultsElement.append(card);
   });
 }
 
-function renderEmptyState(message) {
-  results.className = 'empty-state';
-  results.textContent = message;
+export function renderEmptyState(resultsElement, message) {
+  resultsElement.className = 'empty-state';
+  resultsElement.textContent = message;
 }
 
-function setLoading(isLoading) {
-  submitButton.disabled = isLoading;
-  submitButton.textContent = isLoading ? 'Generating...' : 'Generate quotes';
+export function setLoading(buttonElement, isLoading) {
+  buttonElement.disabled = isLoading;
+  buttonElement.textContent = isLoading ? 'Generating...' : 'Generate quotes';
 }
 
-function setStatus(message, isError = false) {
-  statusMessage.textContent = message;
-  statusMessage.classList.toggle('error', isError);
+export function setStatus(statusElement, message, isError = false) {
+  statusElement.textContent = message;
+  statusElement.classList.toggle('error', isError);
 }
 
-function formatCurrency(value) {
+export function formatCurrency(value) {
   return new Intl.NumberFormat('en-GB', {
     style: 'currency',
     currency: 'GBP',
   }).format(Number(value || 0));
 }
 
-function formatError(body) {
+export function formatError(body) {
   if (Array.isArray(body?.errors)) {
     return body.errors.join(' ');
   }
@@ -116,7 +126,7 @@ function formatError(body) {
   return body?.error || 'Quote request failed.';
 }
 
-function escapeHtml(value) {
+export function escapeHtml(value) {
   return String(value)
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')

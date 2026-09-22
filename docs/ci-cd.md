@@ -22,12 +22,13 @@ Current checks:
 - Validate PHP file syntax when PHP is available in CI.
 - Validate PHP Composer metadata.
 - Composer validation runs in strict mode, so `php-gateway/composer.json` must include required metadata such as `license`.
+- Install frontend dependencies and run Vitest quote flow tests.
 
 Future checks:
 
 - .NET unit tests.
 - PHP gateway tests.
-- Frontend linting and accessibility checks.
+- Frontend linting and accessibility checks beyond the current unit tests.
 - SQL schema validation.
 - Container build validation.
 
