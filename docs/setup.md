@@ -1,6 +1,6 @@
 # Setup Guide
 
-This document describes the planned setup model. The .NET core engine has a health endpoint, quote API, postcode enrichment, and SQL persistence; PHP and frontend layers are still scaffolded.
+This document describes the local setup model. The .NET core engine has a health endpoint, quote API, postcode enrichment, and SQL persistence. The frontend quote journey is implemented and should submit through the PHP gateway once the gateway feature branch is integrated.
 
 ## Local Development Topology
 
@@ -43,6 +43,16 @@ Useful endpoints:
 
 - `GET /health`
 - `POST /api/quotes`
+
+## Frontend Local Run
+
+Serve the static frontend from the repository root:
+
+```text
+python3 -m http.server 3000 --directory frontend
+```
+
+The frontend posts quote requests to `/api/quotes`, so use it behind the PHP gateway or a local reverse proxy that routes `/api/quotes` to the gateway. Do not point browser code directly at the .NET core engine.
 
 ### Azure Deployment
 

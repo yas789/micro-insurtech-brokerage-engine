@@ -83,11 +83,20 @@ Acceptance criteria:
 
 ## Phase 4: Frontend
 
+Status: Complete.
+
 Deliverables:
 
 - `index.html`.
 - `app.js`.
 - Optional CSS or Tailwind configuration.
+
+Completed:
+
+- Static quote form captures client identity and property risk fields.
+- Native JavaScript submits JSON to `/api/quotes` for gateway-backed quote generation.
+- Loading, success, and error states are displayed with accessible live status text.
+- Quote cards render underwriter name, premium, risk rating, region, and an `Accept Cover` action.
 
 Acceptance criteria:
 
