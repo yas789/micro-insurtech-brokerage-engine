@@ -54,6 +54,13 @@ python3 -m http.server 3000 --directory frontend
 
 The frontend posts quote requests to `/api/quotes`, so use it behind the PHP gateway or a local reverse proxy that routes `/api/quotes` to the gateway. Do not point browser code directly at the .NET core engine.
 
+Run frontend unit tests from the frontend directory:
+
+```text
+npm ci
+npm test
+```
+
 ### Azure Deployment
 
 Recommended cloud configuration:
