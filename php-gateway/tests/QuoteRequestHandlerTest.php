@@ -66,6 +66,23 @@ final class QuoteRequestHandlerTest extends TestCase
         self::assertContains('Property details are required.', $handler->validate($payload));
     }
 
+    public function testValidateReturnsAllClientErrors(): void
+    {
+        $handler = new QuoteRequestHandler();
+        $payload = QuotePayloadFactory::validPayload();
+        $payload['client'] = [
+            'firstName' => '',
+            'lastName' => '',
+            'email' => 'not-an-email',
+        ];
+
+        self::assertSame([
+            'Client first name is required.',
+            'Client last name is required.',
+            'A valid client email is required.',
+        ], $handler->validate($payload));
+    }
+
     /**
      * @dataProvider invalidFieldProvider
      * @param array<string, mixed> $override
