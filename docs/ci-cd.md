@@ -18,16 +18,17 @@ Expected workflow:
 Current checks:
 
 - Restore and build the .NET core engine.
+- Run .NET core engine unit tests.
 - Validate required documentation files exist.
 - Validate PHP file syntax when PHP is available in CI.
 - Validate PHP Composer metadata.
 - Composer validation runs in strict mode, so `php-gateway/composer.json` must include required metadata such as `license`.
 - Install PHP gateway development dependencies and run PHPUnit gateway tests.
+- Install frontend dependencies with `npm ci` and run Vitest quote flow tests.
 
 Future checks:
 
-- .NET unit tests.
-- Frontend linting and accessibility checks.
+- Frontend linting and accessibility checks beyond the current unit tests.
 - SQL schema validation.
 - Container build validation.
 

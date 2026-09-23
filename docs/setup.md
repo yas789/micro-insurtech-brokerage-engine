@@ -1,6 +1,6 @@
 # Setup Guide
 
-This document describes the local setup model. The .NET core engine has a health endpoint, quote API, postcode enrichment, and SQL persistence. The PHP gateway forwards browser-facing quote requests to the core engine. The frontend layer is still scaffolded.
+This document describes the local setup model. The .NET core engine has a health endpoint, quote API, postcode enrichment, and SQL persistence. The PHP gateway forwards browser-facing quote requests to the core engine. The frontend quote journey submits through the PHP gateway.
 
 ## Local Development Topology
 
@@ -64,6 +64,23 @@ Run PHP gateway tests from the gateway directory:
 ```text
 composer install
 composer test
+```
+
+## Frontend Local Run
+
+Serve the static frontend from the repository root:
+
+```text
+python3 -m http.server 3000 --directory frontend
+```
+
+The frontend posts quote requests to `/api/quotes`, so use it behind the PHP gateway or a local reverse proxy that routes `/api/quotes` to the gateway. Do not point browser code directly at the .NET core engine.
+
+Run frontend unit tests from the frontend directory:
+
+```text
+npm ci
+npm test
 ```
 
 ### Azure Deployment

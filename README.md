@@ -2,7 +2,7 @@
 
 Project scaffold for a production-oriented vertical slice that models the technical infrastructure of an independent commercial property insurance broker.
 
-The repository currently contains documentation, layer folders, SQL schema, core quote contracts, underwriter scheme calculations, the first quote API endpoint, postcode enrichment, SQL persistence wiring, and a PHP gateway that forwards quote requests. The frontend quote flow is still pending.
+The repository currently contains documentation, layer folders, SQL schema, core quote contracts, underwriter scheme calculations, the first quote API endpoint, postcode enrichment, SQL persistence wiring, a PHP gateway that forwards quote requests, and a static frontend quote journey.
 
 ## Purpose
 
@@ -83,4 +83,4 @@ The browser must not call the .NET core engine directly. The PHP gateway owns br
 
 ## Current Status
 
-Core API slice implemented: SQL schema, C# DTOs, `IUnderwriterService`, three underwriter schemes, `POST /api/quotes`, postcode region lookup, concurrent quote orchestration, EF Core SQL persistence, and unit tests. PHP gateway quote forwarding is implemented. Frontend implementation is pending.
+Core API slice implemented: SQL schema, C# DTOs, `IUnderwriterService`, three underwriter schemes, `POST /api/quotes`, postcode region lookup, concurrent quote orchestration, EF Core SQL persistence, and unit tests. PHP gateway quote forwarding and frontend quote capture/result rendering are implemented.
