@@ -34,6 +34,12 @@ describe('quote frontend', () => {
     });
   });
 
+  it('sets unoccupied to false when checkbox is clear', () => {
+    const form = createForm();
+
+    expect(buildQuotePayload(new FormData(form)).property.isUnoccupied).toBe(false);
+  });
+
   it('renders returned quote cards', () => {
     const results = document.createElement('div');
 
