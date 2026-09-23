@@ -92,6 +92,16 @@ final class BrokerServiceTest extends TestCase
         self::assertSame(['error' => 'Core engine returned an invalid response.'], $result['body']);
     }
 
+    public function testRequestQuotesFallsBackToBadGatewayForMissingStatusCode(): void
+    {
+        $httpClient = new FakeHttpClient(new HttpResponse(0, self::EmptyQuoteResponseJson));
+        $service = new BrokerService('http://core-engine.local', 15, $httpClient);
+
+        $result = $service->requestQuotes(QuotePayloadFactory::validPayload());
+
+        self::assertSame(502, $result['statusCode']);
+        self::assertSame(['quotes' => []], $result['body']);
+    }
 }
 
 final class FakeHttpClient implements HttpClient
