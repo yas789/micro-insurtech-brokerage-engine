@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  bindQuoteForm,
   buildQuotePayload,
   formatCurrency,
   formatError,
@@ -138,6 +139,20 @@ describe('quote frontend', () => {
       json: async () => ({ quotes: [] }),
     });
     await submitPromise;
+  });
+
+  it('binds the form submit event to quote submission', async () => {
+    const { form, button, status, results } = createDomHarness();
+    const fetchQuotes = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ quotes: [] }),
+    });
+
+    bindQuoteForm(form, button, status, results, fetchQuotes);
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await Promise.resolve();
+
+    expect(fetchQuotes).toHaveBeenCalledOnce();
   });
 
   it('displays API validation errors', async () => {
