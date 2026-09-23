@@ -13,7 +13,7 @@ final class QuoteRequestHandlerTest extends TestCase
     {
         $handler = new QuoteRequestHandler();
 
-        self::assertSame([], $handler->validate($this->validPayload()));
+        self::assertSame([], $handler->validate(QuotePayloadFactory::validPayload()));
     }
 
     public function testNormalizeTrimsTextAndCastsNumbers(): void
@@ -51,7 +51,7 @@ final class QuoteRequestHandlerTest extends TestCase
     public function testValidateRejectsMissingClient(): void
     {
         $handler = new QuoteRequestHandler();
-        $payload = $this->validPayload();
+        $payload = QuotePayloadFactory::validPayload();
         unset($payload['client']);
 
         self::assertContains('Client details are required.', $handler->validate($payload));
@@ -60,7 +60,7 @@ final class QuoteRequestHandlerTest extends TestCase
     public function testValidateRejectsMissingProperty(): void
     {
         $handler = new QuoteRequestHandler();
-        $payload = $this->validPayload();
+        $payload = QuotePayloadFactory::validPayload();
         unset($payload['property']);
 
         self::assertContains('Property details are required.', $handler->validate($payload));
@@ -73,7 +73,7 @@ final class QuoteRequestHandlerTest extends TestCase
     public function testValidateRejectsInvalidFields(array $override, string $expectedError): void
     {
         $handler = new QuoteRequestHandler();
-        $payload = array_replace_recursive($this->validPayload(), $override);
+        $payload = array_replace_recursive(QuotePayloadFactory::validPayload(), $override);
 
         self::assertContains($expectedError, $handler->validate($payload));
     }
@@ -92,23 +92,4 @@ final class QuoteRequestHandlerTest extends TestCase
         yield 'unoccupied' => [['property' => ['isUnoccupied' => 'false']], 'Property unoccupied status must be boolean.'];
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function validPayload(): array
-    {
-        return [
-            'client' => [
-                'firstName' => 'Jane',
-                'lastName' => 'Broker',
-                'email' => 'jane@example.com',
-            ],
-            'property' => [
-                'postcode' => 'SW1A 1AA',
-                'yearBuilt' => 1910,
-                'rebuildCost' => 750000.00,
-                'isUnoccupied' => false,
-            ],
-        ];
-    }
 }

@@ -15,7 +15,7 @@ final class BrokerServiceTest extends TestCase
     {
         $httpClient = new FakeHttpClient(new HttpResponse(200, '{"quotes":[]}'));
         $service = new BrokerService('http://core-engine.local/', 7, $httpClient);
-        $payload = $this->validPayload();
+        $payload = QuotePayloadFactory::validPayload();
 
         $result = $service->requestQuotes($payload);
 
@@ -33,7 +33,7 @@ final class BrokerServiceTest extends TestCase
         $httpClient = new FakeHttpClient(new HttpResponse(400, '{"errors":["Invalid risk"]}'));
         $service = new BrokerService('http://core-engine.local', 15, $httpClient);
 
-        $result = $service->requestQuotes($this->validPayload());
+        $result = $service->requestQuotes(QuotePayloadFactory::validPayload());
 
         self::assertSame(400, $result['statusCode']);
         self::assertSame(['errors' => ['Invalid risk']], $result['body']);
@@ -44,7 +44,7 @@ final class BrokerServiceTest extends TestCase
         $httpClient = new FakeHttpClient(new HttpResponse(500, '{"error":"database password leaked"}'));
         $service = new BrokerService('http://core-engine.local', 15, $httpClient);
 
-        $result = $service->requestQuotes($this->validPayload());
+        $result = $service->requestQuotes(QuotePayloadFactory::validPayload());
 
         self::assertSame(502, $result['statusCode']);
         self::assertSame(['error' => 'Core engine failed to generate quotes.'], $result['body']);
@@ -56,7 +56,7 @@ final class BrokerServiceTest extends TestCase
         $httpClient = new FakeHttpClient(new HttpResponse(0, '', 'Connection refused'));
         $service = new BrokerService('http://core-engine.local', 15, $httpClient);
 
-        $result = $service->requestQuotes($this->validPayload());
+        $result = $service->requestQuotes(QuotePayloadFactory::validPayload());
 
         self::assertSame(502, $result['statusCode']);
         self::assertSame(['error' => 'Core engine is unavailable.'], $result['body']);
@@ -68,7 +68,7 @@ final class BrokerServiceTest extends TestCase
         $httpClient = new FakeHttpClient(new HttpResponse(0, '', 'Connection refused'));
         $service = new BrokerService('http://core-engine.local', 15, $httpClient);
 
-        $result = $service->requestQuotes($this->validPayload());
+        $result = $service->requestQuotes(QuotePayloadFactory::validPayload());
 
         self::assertSame(502, $result['statusCode']);
         self::assertSame([
@@ -82,31 +82,12 @@ final class BrokerServiceTest extends TestCase
         $httpClient = new FakeHttpClient(new HttpResponse(200, 'not-json'));
         $service = new BrokerService('http://core-engine.local', 15, $httpClient);
 
-        $result = $service->requestQuotes($this->validPayload());
+        $result = $service->requestQuotes(QuotePayloadFactory::validPayload());
 
         self::assertSame(502, $result['statusCode']);
         self::assertSame(['error' => 'Core engine returned an invalid response.'], $result['body']);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function validPayload(): array
-    {
-        return [
-            'client' => [
-                'firstName' => 'Jane',
-                'lastName' => 'Broker',
-                'email' => 'jane@example.com',
-            ],
-            'property' => [
-                'postcode' => 'SW1A 1AA',
-                'yearBuilt' => 1910,
-                'rebuildCost' => 750000.00,
-                'isUnoccupied' => false,
-            ],
-        ];
-    }
 }
 
 final class FakeHttpClient implements HttpClient
