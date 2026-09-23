@@ -63,28 +63,51 @@ export function renderQuotes(resultsElement, quotes) {
   resultsElement.innerHTML = '';
 
   quotes.forEach((quote, index) => {
-    const card = document.createElement('article');
-    card.className = 'quote-card';
-
-    card.innerHTML = `
-      <div class="rank">Option ${index + 1}</div>
-      <h3>${escapeHtml(quote.underwriterName || 'Unknown underwriter')}</h3>
-      <p class="premium">${formatCurrency(quote.premiumAmount)}</p>
-      <dl>
-        <div>
-          <dt>Risk rating</dt>
-          <dd>${escapeHtml(quote.riskRating || 'Not supplied')}</dd>
-        </div>
-        <div>
-          <dt>Region</dt>
-          <dd>${escapeHtml(quote.region || 'Unavailable')}</dd>
-        </div>
-      </dl>
-      <button type="button" class="accept-button">Accept Cover</button>
-    `;
-
-    resultsElement.append(card);
+    resultsElement.append(createQuoteCard(quote, index));
   });
+}
+
+export function createQuoteCard(quote, index) {
+  const card = document.createElement('article');
+  card.className = 'quote-card';
+
+  const rank = document.createElement('div');
+  rank.className = 'rank';
+  rank.textContent = `Option ${index + 1}`;
+
+  const title = document.createElement('h3');
+  title.textContent = quote.underwriterName || 'Unknown underwriter';
+
+  const premium = document.createElement('p');
+  premium.className = 'premium';
+  premium.textContent = formatCurrency(quote.premiumAmount);
+
+  const details = document.createElement('dl');
+  details.append(
+    createQuoteDetail('Risk rating', quote.riskRating || 'Not supplied'),
+    createQuoteDetail('Region', quote.region || 'Unavailable'),
+  );
+
+  const acceptButton = document.createElement('button');
+  acceptButton.type = 'button';
+  acceptButton.className = 'accept-button';
+  acceptButton.textContent = 'Accept Cover';
+
+  card.append(rank, title, premium, details, acceptButton);
+
+  return card;
+}
+
+function createQuoteDetail(label, value) {
+  const row = document.createElement('div');
+  const term = document.createElement('dt');
+  const description = document.createElement('dd');
+
+  term.textContent = label;
+  description.textContent = value;
+  row.append(term, description);
+
+  return row;
 }
 
 export function renderEmptyState(resultsElement, message) {
@@ -115,13 +138,4 @@ export function formatError(body) {
   }
 
   return body?.error || 'Quote request failed.';
-}
-
-export function escapeHtml(value) {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
 }

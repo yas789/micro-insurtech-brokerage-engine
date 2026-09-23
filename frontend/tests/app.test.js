@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   buildQuotePayload,
-  escapeHtml,
   formatCurrency,
   formatError,
   handleQuoteSubmit,
@@ -133,7 +132,6 @@ describe('quote frontend', () => {
     expect(formatCurrency(120)).toBe('£120.00');
     expect(formatError({ error: 'Gateway failed.' })).toBe('Gateway failed.');
     expect(formatError({ errors: ['First', 'Second'] })).toBe('First Second');
-    expect(escapeHtml('<script>"x"</script>')).toBe('&lt;script&gt;&quot;x&quot;&lt;/script&gt;');
   });
 });
 
