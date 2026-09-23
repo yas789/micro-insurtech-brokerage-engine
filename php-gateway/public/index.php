@@ -28,9 +28,9 @@ if ($method !== 'POST') {
     respond(405, ['error' => 'Method not allowed.']);
 }
 
-$payload = decodeJsonRequest();
-$handler = new QuoteRequestHandler();
-$validationErrors = $handler->validate($payload);
+$quoteRequestPayload = decodeJsonRequest();
+$quoteRequestHandler = new QuoteRequestHandler();
+$validationErrors = $quoteRequestHandler->validate($quoteRequestPayload);
 
 if ($validationErrors !== []) {
     respond(400, ['errors' => $validationErrors]);
@@ -41,8 +41,8 @@ $service = new BrokerService(
     max(1, (int) (getenv('BROKER_CORE_API_TIMEOUT_SECONDS') ?: 15)),
 );
 
-$result = $service->requestQuotes($handler->normalize($payload));
-respond($result['statusCode'], $result['body']);
+$quoteGatewayResponse = $service->requestQuotes($quoteRequestHandler->normalize($quoteRequestPayload));
+respond($quoteGatewayResponse['statusCode'], $quoteGatewayResponse['body']);
 
 /**
  * @return array<string, mixed>
