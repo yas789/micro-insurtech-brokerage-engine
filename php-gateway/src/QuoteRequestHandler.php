@@ -13,43 +13,43 @@ final class QuoteRequestHandler
     public function validate(array $payload): array
     {
         $errors = [];
-        $client = $payload['client'] ?? null;
-        $property = $payload['property'] ?? null;
+        $clientPayload = $payload['client'] ?? null;
+        $propertyPayload = $payload['property'] ?? null;
 
-        if (!is_array($client)) {
+        if (!is_array($clientPayload)) {
             $errors[] = 'Client details are required.';
         } else {
-            if (!$this->hasText($client['firstName'] ?? null)) {
+            if (!$this->hasText($clientPayload['firstName'] ?? null)) {
                 $errors[] = 'Client first name is required.';
             }
 
-            if (!$this->hasText($client['lastName'] ?? null)) {
+            if (!$this->hasText($clientPayload['lastName'] ?? null)) {
                 $errors[] = 'Client last name is required.';
             }
 
-            if (!$this->hasText($client['email'] ?? null) || filter_var($client['email'], FILTER_VALIDATE_EMAIL) === false) {
+            if (!$this->hasText($clientPayload['email'] ?? null) || filter_var($clientPayload['email'], FILTER_VALIDATE_EMAIL) === false) {
                 $errors[] = 'A valid client email is required.';
             }
         }
 
-        if (!is_array($property)) {
+        if (!is_array($propertyPayload)) {
             $errors[] = 'Property details are required.';
             return $errors;
         }
 
-        if (!$this->hasText($property['postcode'] ?? null)) {
+        if (!$this->hasText($propertyPayload['postcode'] ?? null)) {
             $errors[] = 'Property postcode is required.';
         }
 
-        if (!isset($property['yearBuilt']) || filter_var($property['yearBuilt'], FILTER_VALIDATE_INT) === false) {
+        if (!isset($propertyPayload['yearBuilt']) || filter_var($propertyPayload['yearBuilt'], FILTER_VALIDATE_INT) === false) {
             $errors[] = 'Property year built must be an integer.';
         }
 
-        if (!isset($property['rebuildCost']) || !is_numeric($property['rebuildCost']) || (float) $property['rebuildCost'] <= 0) {
+        if (!isset($propertyPayload['rebuildCost']) || !is_numeric($propertyPayload['rebuildCost']) || (float) $propertyPayload['rebuildCost'] <= 0) {
             $errors[] = 'Property rebuild cost must be greater than zero.';
         }
 
-        if (!isset($property['isUnoccupied']) || !is_bool($property['isUnoccupied'])) {
+        if (!isset($propertyPayload['isUnoccupied']) || !is_bool($propertyPayload['isUnoccupied'])) {
             $errors[] = 'Property unoccupied status must be boolean.';
         }
 
@@ -63,21 +63,21 @@ final class QuoteRequestHandler
     public function normalize(array $payload): array
     {
         /** @var array<string, mixed> $client */
-        $client = $payload['client'];
+        $clientPayload = $payload['client'];
         /** @var array<string, mixed> $property */
-        $property = $payload['property'];
+        $propertyPayload = $payload['property'];
 
         return [
             'client' => [
-                'firstName' => trim((string) $client['firstName']),
-                'lastName' => trim((string) $client['lastName']),
-                'email' => trim((string) $client['email']),
+                'firstName' => trim((string) $clientPayload['firstName']),
+                'lastName' => trim((string) $clientPayload['lastName']),
+                'email' => trim((string) $clientPayload['email']),
             ],
             'property' => [
-                'postcode' => trim((string) $property['postcode']),
-                'yearBuilt' => (int) $property['yearBuilt'],
-                'rebuildCost' => (float) $property['rebuildCost'],
-                'isUnoccupied' => (bool) $property['isUnoccupied'],
+                'postcode' => trim((string) $propertyPayload['postcode']),
+                'yearBuilt' => (int) $propertyPayload['yearBuilt'],
+                'rebuildCost' => (float) $propertyPayload['rebuildCost'],
+                'isUnoccupied' => (bool) $propertyPayload['isUnoccupied'],
             ],
         ];
     }
