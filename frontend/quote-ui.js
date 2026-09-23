@@ -2,6 +2,11 @@ const requestingQuotesMessage = 'Requesting quotes from underwriters...';
 const processingQuotesMessage = 'Quote request is being processed.';
 const quotesReturnedMessage = 'Quotes returned in premium order.';
 const noQuotesMessage = 'No quotes to display yet.';
+const quoteApiPath = '/api/quotes';
+const jsonHeaders = {
+  'Content-Type': 'application/json',
+  Accept: 'application/json',
+};
 
 export function bindQuoteForm(formElement, buttonElement, statusElement, resultsElement, quoteRequest = fetch) {
   formElement.addEventListener('submit', async (event) => {
@@ -18,12 +23,9 @@ export async function handleQuoteSubmit(event, formElement, buttonElement, statu
   renderEmptyState(resultsElement, processingQuotesMessage);
 
   try {
-    const response = await quoteRequest('/api/quotes', {
+    const response = await quoteRequest(quoteApiPath, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
+      headers: jsonHeaders,
       body: JSON.stringify(requestPayload),
     });
     const responseBody = await response.json();
