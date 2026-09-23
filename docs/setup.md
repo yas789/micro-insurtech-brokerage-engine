@@ -1,6 +1,6 @@
 # Setup Guide
 
-This document describes the planned setup model. The .NET core engine has a health endpoint, quote API, postcode enrichment, and SQL persistence; PHP and frontend layers are still scaffolded.
+This document describes the local setup model. The .NET core engine has a health endpoint, quote API, postcode enrichment, and SQL persistence. The PHP gateway forwards browser-facing quote requests to the core engine. The frontend layer is still scaffolded.
 
 ## Local Development Topology
 
@@ -43,6 +43,28 @@ Useful endpoints:
 
 - `GET /health`
 - `POST /api/quotes`
+
+## PHP Gateway Local Run
+
+Set the PHP gateway variables, then run the built-in PHP server from the repository root:
+
+```text
+BROKER_CORE_API_BASE_URL=http://localhost:5000 php -S localhost:8080 -t php-gateway/public
+```
+
+Useful endpoints:
+
+- `GET /health`
+- `POST /api/quotes`
+
+The gateway validates browser-facing JSON, normalizes scalar request values, forwards valid quote requests to the .NET core engine, and converts upstream failures into safe JSON errors.
+
+Run PHP gateway tests from the gateway directory:
+
+```text
+composer install
+composer test
+```
 
 ### Azure Deployment
 

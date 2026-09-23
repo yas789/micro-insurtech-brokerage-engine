@@ -68,12 +68,21 @@ Acceptance criteria:
 
 ## Phase 3: PHP Gateway
 
+Status: Complete.
+
 Deliverables:
 
 - `BrokerService.php`.
 - `index.php` controller endpoint.
 - JSON request validation and response handling.
 - Upstream .NET API error handling.
+
+Completed:
+
+- `BrokerService` forwards normalized quote requests to the .NET core engine with native `curl`.
+- `public/index.php` exposes `GET /health` and `POST /api/quotes`.
+- Gateway validation rejects malformed JSON and missing required quote fields before forwarding.
+- Upstream network and server failures return safe JSON errors to the browser.
 
 Acceptance criteria:
 
