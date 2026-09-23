@@ -32,6 +32,16 @@ final class BrokerServiceTest extends TestCase
         self::assertSame($payload, json_decode($httpClient->json, true));
     }
 
+    public function testRequestQuotesBuildsCoreApiUrlWithoutDuplicateSlash(): void
+    {
+        $httpClient = new FakeHttpClient(new HttpResponse(200, self::EmptyQuoteResponseJson));
+        $service = new BrokerService('http://core-engine.local////', 15, $httpClient);
+
+        $service->requestQuotes(QuotePayloadFactory::validPayload());
+
+        self::assertSame('http://core-engine.local/api/quotes', $httpClient->url);
+    }
+
     public function testRequestQuotesReturnsUpstreamValidationResponse(): void
     {
         $httpClient = new FakeHttpClient(new HttpResponse(400, self::InvalidRiskResponseJson));
