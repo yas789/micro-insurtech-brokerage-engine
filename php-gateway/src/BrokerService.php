@@ -19,35 +19,35 @@ final class BrokerService
      */
     public function requestQuotes(array $payload): array
     {
-        $url = rtrim($this->coreApiBaseUrl, '/') . '/api/quotes';
+        $quoteEndpointUrl = rtrim($this->coreApiBaseUrl, '/') . '/api/quotes';
         $encodedPayload = json_encode($payload);
 
         if ($encodedPayload === false) {
             return $this->gatewayError('Quote request could not be encoded.', 500);
         }
 
-        $client = $this->httpClient ?? new CurlHttpClient();
-        $response = $client->postJson($url, $encodedPayload, [
+        $httpClient = $this->httpClient ?? new CurlHttpClient();
+        $coreResponse = $httpClient->postJson($quoteEndpointUrl, $encodedPayload, [
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
         ], $this->timeoutSeconds);
 
-        if ($response->error !== null) {
-            return $this->gatewayError('Core engine is unavailable.', 502, $response->error);
+        if ($coreResponse->error !== null) {
+            return $this->gatewayError('Core engine is unavailable.', 502, $coreResponse->error);
         }
 
-        $decodedResponse = json_decode($response->body, true);
+        $decodedResponse = json_decode($coreResponse->body, true);
 
         if (!is_array($decodedResponse)) {
             return $this->gatewayError('Core engine returned an invalid response.', 502);
         }
 
-        if ($response->statusCode >= 500) {
+        if ($coreResponse->statusCode >= 500) {
             return $this->gatewayError('Core engine failed to generate quotes.', 502);
         }
 
         return [
-            'statusCode' => $response->statusCode > 0 ? $response->statusCode : 502,
+            'statusCode' => $coreResponse->statusCode > 0 ? $coreResponse->statusCode : 502,
             'body' => $decodedResponse,
         ];
     }
