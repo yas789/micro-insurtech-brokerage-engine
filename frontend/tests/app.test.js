@@ -213,10 +213,30 @@ describe('quote frontend', () => {
     expect(results.textContent).toBe('No quotes to display yet.');
   });
 
+  it('clears previous error state after a later successful request', async () => {
+    const { form, button, status, results } = createDomHarness();
+    const failedRequest = vi.fn().mockRejectedValue(new Error('Network unavailable'));
+    const successfulRequest = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ quotes: [] }),
+    });
+
+    await handleQuoteSubmit(fakeSubmitEvent(), form, button, status, results, failedRequest);
+    await handleQuoteSubmit(fakeSubmitEvent(), form, button, status, results, successfulRequest);
+
+    expect(status.classList.contains('error')).toBe(false);
+    expect(status.textContent).toBe('Quotes returned in premium order.');
+  });
+
   it('formats helper output safely', () => {
     expect(formatCurrency(120)).toBe('£120.00');
     expect(formatError({ error: 'Gateway failed.' })).toBe('Gateway failed.');
     expect(formatError({ errors: ['First', 'Second'] })).toBe('First Second');
+    expect(formatError({})).toBe('Quote request failed.');
+  });
+
+  it('uses generic error message when validation error list is empty', () => {
+    expect(formatError({ errors: [] })).toBe('Quote request failed.');
   });
 });
 

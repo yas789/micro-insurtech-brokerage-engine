@@ -42,6 +42,42 @@ public sealed class QuotesControllerTests
         Assert.False(persistenceService.WasCalled);
     }
 
+    [Fact]
+    public async Task GenerateQuoteAsync_ReturnsBadRequestWhenRequestIsMissing()
+    {
+        var orchestrationService = new StubQuoteOrchestrationService();
+        var persistenceService = new StubQuotePersistenceService();
+        var controller = new QuotesController(orchestrationService, persistenceService);
+
+        var result = await controller.GenerateQuoteAsync(null!, CancellationToken.None);
+
+        Assert.IsType<BadRequestObjectResult>(result.Result);
+        Assert.False(orchestrationService.WasCalled);
+        Assert.False(persistenceService.WasCalled);
+    }
+
+    [Theory]
+    [InlineData("firstName")]
+    [InlineData("lastName")]
+    [InlineData("email")]
+    [InlineData("postcode")]
+    [InlineData("yearBuiltTooOld")]
+    [InlineData("yearBuiltTooNew")]
+    [InlineData("rebuildCost")]
+    public async Task GenerateQuoteAsync_ReturnsBadRequestAndSkipsSideEffectsForInvalidFields(string field)
+    {
+        var orchestrationService = new StubQuoteOrchestrationService();
+        var persistenceService = new StubQuotePersistenceService();
+        var controller = new QuotesController(orchestrationService, persistenceService);
+        var request = CreateRequestWithInvalidField(field);
+
+        var result = await controller.GenerateQuoteAsync(request, CancellationToken.None);
+
+        Assert.IsType<BadRequestObjectResult>(result.Result);
+        Assert.False(orchestrationService.WasCalled);
+        Assert.False(persistenceService.WasCalled);
+    }
+
     [Theory]
     [InlineData("firstName")]
     [InlineData("lastName")]
@@ -104,15 +140,32 @@ public sealed class QuotesControllerTests
         };
     }
 
+    private static QuoteRequest CreateRequestWithInvalidField(string field)
+    {
+        return field switch
+        {
+            "firstName" => CreateRequest(firstName: " "),
+            "lastName" => CreateRequest(lastName: " "),
+            "email" => CreateRequest(email: "not-an-email"),
+            "postcode" => CreateRequest(postcode: " "),
+            "yearBuiltTooOld" => CreateRequest(yearBuilt: 1499),
+            "yearBuiltTooNew" => CreateRequest(yearBuilt: 2101),
+            "rebuildCost" => CreateRequest(rebuildCost: 0),
+            _ => throw new ArgumentOutOfRangeException(nameof(field), field, "Unsupported field."),
+        };
+    }
+
     private static QuoteRequest CreateRequest(
         string firstName = "Jane",
         string lastName = "Broker",
         string email = "jane@example.com",
-        string postcode = "SW1A 1AA")
+        string postcode = "SW1A 1AA",
+        int yearBuilt = 1910,
+        decimal rebuildCost = 750000.00m)
     {
         return new QuoteRequest(
             new ClientDto(firstName, lastName, email),
-            new PropertyEvaluationDto(postcode, 1910, 750000.00m, false));
+            new PropertyEvaluationDto(postcode, yearBuilt, rebuildCost, false));
     }
 
     private sealed class StubQuotePersistenceService : IQuotePersistenceService
