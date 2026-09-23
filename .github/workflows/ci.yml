@@ -64,7 +64,7 @@ jobs:
 
       - name: Install PHP dependencies
         working-directory: php-gateway
-        run: composer install --no-interaction --prefer-dist
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
       - name: Check PHP syntax
         run: |
