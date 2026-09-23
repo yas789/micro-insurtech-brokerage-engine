@@ -11,9 +11,13 @@ use PHPUnit\Framework\TestCase;
 
 final class BrokerServiceTest extends TestCase
 {
+    private const EmptyQuoteResponseJson = '{"quotes":[]}';
+    private const InvalidRiskResponseJson = '{"errors":["Invalid risk"]}';
+    private const LeakyServerErrorJson = '{"error":"database password leaked"}';
+
     public function testRequestQuotesPostsJsonToCoreApi(): void
     {
-        $httpClient = new FakeHttpClient(new HttpResponse(200, '{"quotes":[]}'));
+        $httpClient = new FakeHttpClient(new HttpResponse(200, self::EmptyQuoteResponseJson));
         $service = new BrokerService('http://core-engine.local/', 7, $httpClient);
         $payload = QuotePayloadFactory::validPayload();
 
@@ -30,7 +34,7 @@ final class BrokerServiceTest extends TestCase
 
     public function testRequestQuotesReturnsUpstreamValidationResponse(): void
     {
-        $httpClient = new FakeHttpClient(new HttpResponse(400, '{"errors":["Invalid risk"]}'));
+        $httpClient = new FakeHttpClient(new HttpResponse(400, self::InvalidRiskResponseJson));
         $service = new BrokerService('http://core-engine.local', 15, $httpClient);
 
         $result = $service->requestQuotes(QuotePayloadFactory::validPayload());
@@ -41,7 +45,7 @@ final class BrokerServiceTest extends TestCase
 
     public function testRequestQuotesConvertsUpstreamServerErrorToSafeGatewayError(): void
     {
-        $httpClient = new FakeHttpClient(new HttpResponse(500, '{"error":"database password leaked"}'));
+        $httpClient = new FakeHttpClient(new HttpResponse(500, self::LeakyServerErrorJson));
         $service = new BrokerService('http://core-engine.local', 15, $httpClient);
 
         $result = $service->requestQuotes(QuotePayloadFactory::validPayload());
