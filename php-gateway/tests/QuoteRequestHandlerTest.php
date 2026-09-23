@@ -83,6 +83,25 @@ final class QuoteRequestHandlerTest extends TestCase
         ], $handler->validate($payload));
     }
 
+    public function testValidateReturnsAllPropertyErrors(): void
+    {
+        $handler = new QuoteRequestHandler();
+        $payload = QuotePayloadFactory::validPayload();
+        $payload['property'] = [
+            'postcode' => '',
+            'yearBuilt' => 'old',
+            'rebuildCost' => 0,
+            'isUnoccupied' => 'false',
+        ];
+
+        self::assertSame([
+            'Property postcode is required.',
+            'Property year built must be an integer.',
+            'Property rebuild cost must be greater than zero.',
+            'Property unoccupied status must be boolean.',
+        ], $handler->validate($payload));
+    }
+
     /**
      * @dataProvider invalidFieldProvider
      * @param array<string, mixed> $override
