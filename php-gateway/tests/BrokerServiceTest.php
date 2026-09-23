@@ -13,7 +13,7 @@ final class BrokerServiceTest extends TestCase
 {
     public function testRequestQuotesPostsJsonToCoreApi(): void
     {
-        $httpClient = new CapturingHttpClient(new HttpResponse(200, '{"quotes":[]}'));
+        $httpClient = new FakeHttpClient(new HttpResponse(200, '{"quotes":[]}'));
         $service = new BrokerService('http://core-engine.local/', 7, $httpClient);
         $payload = $this->validPayload();
 
@@ -30,7 +30,7 @@ final class BrokerServiceTest extends TestCase
 
     public function testRequestQuotesReturnsUpstreamValidationResponse(): void
     {
-        $httpClient = new CapturingHttpClient(new HttpResponse(400, '{"errors":["Invalid risk"]}'));
+        $httpClient = new FakeHttpClient(new HttpResponse(400, '{"errors":["Invalid risk"]}'));
         $service = new BrokerService('http://core-engine.local', 15, $httpClient);
 
         $result = $service->requestQuotes($this->validPayload());
@@ -41,7 +41,7 @@ final class BrokerServiceTest extends TestCase
 
     public function testRequestQuotesConvertsUpstreamServerErrorToSafeGatewayError(): void
     {
-        $httpClient = new CapturingHttpClient(new HttpResponse(500, '{"error":"database password leaked"}'));
+        $httpClient = new FakeHttpClient(new HttpResponse(500, '{"error":"database password leaked"}'));
         $service = new BrokerService('http://core-engine.local', 15, $httpClient);
 
         $result = $service->requestQuotes($this->validPayload());
@@ -53,7 +53,7 @@ final class BrokerServiceTest extends TestCase
     public function testRequestQuotesConvertsNetworkFailureToSafeGatewayError(): void
     {
         putenv('APP_ENV=production');
-        $httpClient = new CapturingHttpClient(new HttpResponse(0, '', 'Connection refused'));
+        $httpClient = new FakeHttpClient(new HttpResponse(0, '', 'Connection refused'));
         $service = new BrokerService('http://core-engine.local', 15, $httpClient);
 
         $result = $service->requestQuotes($this->validPayload());
@@ -65,7 +65,7 @@ final class BrokerServiceTest extends TestCase
     public function testRequestQuotesIncludesNetworkFailureDetailInLocalEnvironment(): void
     {
         putenv('APP_ENV=local');
-        $httpClient = new CapturingHttpClient(new HttpResponse(0, '', 'Connection refused'));
+        $httpClient = new FakeHttpClient(new HttpResponse(0, '', 'Connection refused'));
         $service = new BrokerService('http://core-engine.local', 15, $httpClient);
 
         $result = $service->requestQuotes($this->validPayload());
@@ -79,7 +79,7 @@ final class BrokerServiceTest extends TestCase
 
     public function testRequestQuotesConvertsInvalidJsonToGatewayError(): void
     {
-        $httpClient = new CapturingHttpClient(new HttpResponse(200, 'not-json'));
+        $httpClient = new FakeHttpClient(new HttpResponse(200, 'not-json'));
         $service = new BrokerService('http://core-engine.local', 15, $httpClient);
 
         $result = $service->requestQuotes($this->validPayload());
@@ -109,7 +109,7 @@ final class BrokerServiceTest extends TestCase
     }
 }
 
-final class CapturingHttpClient implements HttpClient
+final class FakeHttpClient implements HttpClient
 {
     public string $url = '';
 
