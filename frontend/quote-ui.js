@@ -1,3 +1,8 @@
+const requestingQuotesMessage = 'Requesting quotes from underwriters...';
+const processingQuotesMessage = 'Quote request is being processed.';
+const quotesReturnedMessage = 'Quotes returned in premium order.';
+const noQuotesMessage = 'No quotes to display yet.';
+
 export function bindQuoteForm(formElement, buttonElement, statusElement, resultsElement, quoteRequest = fetch) {
   formElement.addEventListener('submit', async (event) => {
     await handleQuoteSubmit(event, formElement, buttonElement, statusElement, resultsElement, quoteRequest);
@@ -9,8 +14,8 @@ export async function handleQuoteSubmit(event, formElement, buttonElement, statu
 
   const requestPayload = buildQuotePayload(new FormData(formElement));
   setLoading(buttonElement, true);
-  setStatus(statusElement, 'Requesting quotes from underwriters...');
-  renderEmptyState(resultsElement, 'Quote request is being processed.');
+  setStatus(statusElement, requestingQuotesMessage);
+  renderEmptyState(resultsElement, processingQuotesMessage);
 
   try {
     const response = await quoteRequest('/api/quotes', {
@@ -28,9 +33,9 @@ export async function handleQuoteSubmit(event, formElement, buttonElement, statu
     }
 
     renderQuotes(resultsElement, responseBody.quotes || []);
-    setStatus(statusElement, 'Quotes returned in premium order.');
+    setStatus(statusElement, quotesReturnedMessage);
   } catch (error) {
-    renderEmptyState(resultsElement, 'No quotes to display yet.');
+    renderEmptyState(resultsElement, noQuotesMessage);
     setStatus(statusElement, error instanceof Error ? error.message : 'Quote request failed.', true);
   } finally {
     setLoading(buttonElement, false);
