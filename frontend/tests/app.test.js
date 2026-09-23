@@ -66,6 +66,17 @@ describe('quote frontend', () => {
     expect(results.textContent).toContain('Accept Cover');
   });
 
+  it('renders fallback values for incomplete quote results', () => {
+    const results = document.createElement('div');
+
+    renderQuotes(results, [{ premiumAmount: 0 }]);
+
+    expect(results.textContent).toContain('Unknown underwriter');
+    expect(results.textContent).toContain('Not supplied');
+    expect(results.textContent).toContain('Unavailable');
+    expect(results.textContent).toContain('£0.00');
+  });
+
   it('renders an empty state when no quotes are returned', () => {
     const results = document.createElement('div');
 
