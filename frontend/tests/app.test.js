@@ -180,6 +180,22 @@ describe('quote frontend', () => {
     expect(results.textContent).toBe('No quotes to display yet.');
   });
 
+  it('displays invalid JSON response failures', async () => {
+    const { form, button, status, results } = createDomHarness();
+    const fetchQuotes = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => {
+        throw new Error('Invalid JSON');
+      },
+    });
+
+    await handleQuoteSubmit(fakeSubmitEvent(), form, button, status, results, fetchQuotes);
+
+    expect(status.classList.contains('error')).toBe(true);
+    expect(status.textContent).toBe('Invalid JSON');
+    expect(results.textContent).toBe('No quotes to display yet.');
+  });
+
   it('formats helper output safely', () => {
     expect(formatCurrency(120)).toBe('£120.00');
     expect(formatError({ error: 'Gateway failed.' })).toBe('Gateway failed.');
