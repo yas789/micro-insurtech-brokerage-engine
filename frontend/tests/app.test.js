@@ -121,6 +121,25 @@ describe('quote frontend', () => {
     expect(results.textContent).toContain('AvivaScheme');
   });
 
+  it('shows loading state while quote request is pending', async () => {
+    const { form, button, status, results } = createDomHarness();
+    const pendingResponse = createDeferredResponse();
+    const fetchQuotes = vi.fn().mockReturnValue(pendingResponse.promise);
+
+    const submitPromise = handleQuoteSubmit(fakeSubmitEvent(), form, button, status, results, fetchQuotes);
+
+    expect(button.disabled).toBe(true);
+    expect(button.textContent).toBe('Generating...');
+    expect(status.textContent).toBe('Requesting quotes from underwriters...');
+    expect(results.textContent).toBe('Quote request is being processed.');
+
+    pendingResponse.resolve({
+      ok: true,
+      json: async () => ({ quotes: [] }),
+    });
+    await submitPromise;
+  });
+
   it('displays API validation errors', async () => {
     const { form, button, status, results } = createDomHarness();
     const fetchQuotes = vi.fn().mockResolvedValue({
@@ -182,4 +201,13 @@ function fakeSubmitEvent() {
   return {
     preventDefault: vi.fn(),
   };
+}
+
+function createDeferredResponse() {
+  let resolve;
+  const promise = new Promise((promiseResolve) => {
+    resolve = promiseResolve;
+  });
+
+  return { promise, resolve };
 }
