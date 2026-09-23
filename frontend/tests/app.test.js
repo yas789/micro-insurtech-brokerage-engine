@@ -6,7 +6,7 @@ import {
   formatError,
   handleQuoteSubmit,
   renderQuotes,
-} from '../app.js';
+} from '../quote-ui.js';
 
 describe('quote frontend', () => {
   it('builds the quote payload from form fields', () => {
