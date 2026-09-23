@@ -68,6 +68,24 @@ describe('quote frontend', () => {
     expect(results.textContent).toBe('No underwriters returned a quote for this risk.');
   });
 
+  it('renders quote text without interpreting markup', () => {
+    const results = document.createElement('div');
+
+    renderQuotes(results, [
+      {
+        underwriterName: '<script>alert("x")</script>',
+        premiumAmount: 120,
+        riskRating: '<b>Low</b>',
+        region: '<img src=x>',
+      },
+    ]);
+
+    expect(results.querySelector('script')).toBeNull();
+    expect(results.querySelector('img')).toBeNull();
+    expect(results.textContent).toContain('<script>alert("x")</script>');
+    expect(results.textContent).toContain('<b>Low</b>');
+  });
+
   it('submits quote requests to the gateway and renders success', async () => {
     const { form, button, status, results } = createDomHarness();
     const fetchQuotes = vi.fn().mockResolvedValue({
