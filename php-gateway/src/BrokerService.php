@@ -6,6 +6,8 @@ namespace MicroInsurTech\Gateway;
 
 final class BrokerService
 {
+    private const QuoteEndpointPath = '/api/quotes';
+
     public function __construct(
         private readonly string $coreApiBaseUrl,
         private readonly int $timeoutSeconds = 15,
@@ -19,7 +21,7 @@ final class BrokerService
      */
     public function requestQuotes(array $payload): array
     {
-        $quoteEndpointUrl = rtrim($this->coreApiBaseUrl, '/') . '/api/quotes';
+        $quoteEndpointUrl = rtrim($this->coreApiBaseUrl, '/') . self::QuoteEndpointPath;
         $encodedPayload = json_encode($payload);
 
         if ($encodedPayload === false) {
