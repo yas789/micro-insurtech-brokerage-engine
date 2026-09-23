@@ -59,6 +59,13 @@ Useful endpoints:
 
 The gateway validates browser-facing JSON, normalizes scalar request values, forwards valid quote requests to the .NET core engine, and converts upstream failures into safe JSON errors.
 
+Run PHP gateway tests from the gateway directory:
+
+```text
+composer install
+composer test
+```
+
 ### Azure Deployment
 
 Recommended cloud configuration:
