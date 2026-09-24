@@ -33,6 +33,32 @@ POSTCODES_API_BASE_URL=https://postcodes.io
 
 Apply `database/schema.sql` to SQL Server first, then provide `ConnectionStrings__BrokerDatabase` before sending quote requests. The API starts only when the `BrokerDatabase` connection string is configured.
 
+Prerequisites for local end-to-end verification:
+
+- Docker with Linux containers available on PATH.
+- .NET 8 SDK/runtime available on PATH.
+- Local ports `1433` and `5000` available.
+
+Start local SQL Server in Docker:
+
+```text
+SQLSERVER_SA_PASSWORD=Change_this_password_123! scripts/start-local-sqlserver.sh
+```
+
+Create the local database and apply `database/schema.sql`:
+
+```text
+SQLSERVER_SA_PASSWORD=Change_this_password_123! scripts/apply-local-schema.sh
+```
+
+Export the core engine configuration:
+
+```text
+export ASPNETCORE_ENVIRONMENT=Development
+export ConnectionStrings__BrokerDatabase='Server=localhost,1433;Database=MicroInsurTech;User Id=sa;Password=Change_this_password_123!;TrustServerCertificate=True;'
+export POSTCODES_API_BASE_URL=https://postcodes.io
+```
+
 From the repository root:
 
 ```text
@@ -43,6 +69,14 @@ Useful endpoints:
 
 - `GET /health`
 - `POST /api/quotes`
+
+In a second shell, run the backend verification script:
+
+```text
+SQLSERVER_SA_PASSWORD=Change_this_password_123! scripts/verify-core-engine.sh
+```
+
+That script checks `/health`, sends a valid quote request, and prints persisted row counts from SQL Server.
 
 ## PHP Gateway Local Run
 
