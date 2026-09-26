@@ -17,3 +17,7 @@ Postcode HTTP-client tests use an in-process message handler, without external
 network access. They check postcode encoding, region parsing, blank input,
 404/503 responses, malformed JSON, transport failures, and timeouts. These
 failures return an unavailable region; caller cancellation must still propagate.
+
+Orchestration tests hold scheme tasks open to verify that all schemes start
+before waiting for their results. A failed scheme fails the request rather than
+returning a partial quote list. No timing sleeps or live insurers are required.

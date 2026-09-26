@@ -103,6 +103,54 @@ public sealed class QuoteOrchestrationServiceTests
         Assert.Equal(cancellationTokenSource.Token, postcodeLookup.CapturedCancellationToken);
     }
 
+    [Fact]
+    public async Task GenerateQuotesAsync_StartsEverySchemeBeforeWaitingForResults()
+    {
+        var first = new DeferredUnderwriterService();
+        var second = new DeferredUnderwriterService();
+        var service = new QuoteOrchestrationService(
+            new IUnderwriterService[] { first, second }, new StubPostcodeLookupService("London"));
+
+        var pending = service.GenerateQuotesAsync(CreateRequest(), CancellationToken.None);
+
+        Assert.True(first.WasCalled);
+        Assert.True(second.WasCalled);
+        Assert.False(pending.IsCompleted);
+        second.Completion.SetResult(new QuoteResult("Second", 200, "Low", "London"));
+        Assert.False(pending.IsCompleted);
+        first.Completion.SetResult(new QuoteResult("First", 100, "Low", "London"));
+
+        var response = await pending.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(new[] { "First", "Second" }, response.Quotes.Select(quote => quote.UnderwriterName));
+    }
+
+    [Fact]
+    public async Task GenerateQuotesAsync_DoesNotReturnPartialQuotesWhenSchemeFails()
+    {
+        var failed = new DeferredUnderwriterService();
+        var service = new QuoteOrchestrationService(
+            new IUnderwriterService[] { new StubUnderwriterService("Success", 100), failed },
+            new StubPostcodeLookupService(null));
+        var failure = new InvalidOperationException("Rating failed");
+
+        var pending = service.GenerateQuotesAsync(CreateRequest(), CancellationToken.None);
+        failed.Completion.SetException(failure);
+
+        Assert.Same(failure, await Assert.ThrowsAsync<InvalidOperationException>(() => pending));
+    }
+
+    private sealed class DeferredUnderwriterService : IUnderwriterService
+    {
+        public bool WasCalled { get; private set; }
+        public TaskCompletionSource<QuoteResult> Completion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public Task<QuoteResult> CalculatePremiumAsync(PropertyEvaluationDto property)
+        {
+            WasCalled = true;
+            return Completion.Task;
+        }
+    }
+
     private static QuoteRequest CreateRequest()
     {
         return new QuoteRequest(
