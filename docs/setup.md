@@ -51,6 +51,13 @@ Create the local database and apply `database/schema.sql`:
 SQLSERVER_SA_PASSWORD=Change_this_password_123! scripts/apply-local-schema.sh
 ```
 
+The initializer creates quote tables only when all three are absent. Re-running
+it preserves existing records; a partial schema is reported as an error. Database
+names must be simple SQL identifiers. The script resolves the schema relative to
+its own location and fails on SQL errors. `database/schema.sql` itself remains a
+destructive rebuild script, not a migration; do not use it to upgrade saved data.
+The SQL startup helper waits for readiness even when the container is already running.
+
 Export the core engine configuration:
 
 ```text

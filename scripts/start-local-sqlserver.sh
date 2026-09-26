@@ -12,10 +12,7 @@ fi
 
 if docker ps --format '{{.Names}}' | grep -qx "$container_name"; then
     echo "SQL Server container '$container_name' is already running."
-    exit 0
-fi
-
-if docker ps -a --format '{{.Names}}' | grep -qx "$container_name"; then
+elif docker ps -a --format '{{.Names}}' | grep -qx "$container_name"; then
     docker start "$container_name" >/dev/null
 else
     docker run \
@@ -37,6 +34,7 @@ while [ "$attempt" -le 60 ]; do
         -U sa \
         -P "$sa_password" \
         -C \
+        -b \
         -Q "SELECT 1" >/dev/null 2>&1; then
         echo "SQL Server is ready on localhost:$host_port."
         exit 0
