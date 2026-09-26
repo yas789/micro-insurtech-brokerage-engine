@@ -56,3 +56,29 @@ postcode success/failure cases can be required with `--postcode-fixture` when
 the core is configured to use the test fixture. `--unavailable-gateway-url`
 checks a separate gateway pointing to an unavailable core, with `APP_ENV` unset
 or set to a value other than `local` so transport details are not exposed.
+
+## Repeatable integration runner
+
+With Docker (Linux containers), .NET 8, PHP 8.1+ with cURL, and Python 3.10+:
+
+```sh
+python3 scripts/run-integration.py
+```
+
+The runner starts/readies SQL Server, initializes a separate
+`MicroInsurTechVerification` database by default, builds the core API, and starts
+the real PHP gateway and frontend proxy. Ports 3000, 5000, 8080, 8081, and 5099
+must be free. Existing `SQLSERVER_*` variables select the container, credentials,
+database, and SQL host port. SQL Server's container image requires an amd64 Linux
+runtime; on Apple Silicon use a Docker setup supporting that image or run CI.
+
+Only the external postcode API is substituted: `scripts/fixtures/postcodes.py`
+returns London for `SW1A 1AA` and HTTP 503 for `ZZ99 9ZZ`. The latter must still
+produce and persist all three quotes with no region. A second real PHP gateway
+points to a closed core port to verify safe 502 responses. The fixture is never
+selected by default application configuration.
+
+Child application processes stop on completion/failure; diagnostics are written
+to ignored `logs/integration/`. The SQL container and uniquely named sample
+records remain for inspection. Re-runs preserve previous data. This local/CI
+runner is not a production deployment command.
