@@ -117,6 +117,73 @@ public sealed class QuotesControllerTests
         Assert.True(persistenceService.WasCalled);
     }
 
+    [Fact]
+    public async Task GenerateQuoteAsync_WaitsForPersistenceBeforeReturningSuccess()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var persistence = new DeferredPersistenceService();
+        var response = new QuoteResponse(new[] { new QuoteResult("Test", 100, "Low", "London") });
+        var controller = new QuotesController(new StubQuoteOrchestrationService(response), persistence);
+        var request = CreateRequest();
+
+        var pending = controller.GenerateQuoteAsync(request, cancellation.Token);
+
+        Assert.False(pending.IsCompleted);
+        Assert.Same(request, persistence.Request);
+        Assert.Same(response, persistence.Response);
+        Assert.Equal(cancellation.Token, persistence.Token);
+        persistence.Completion.SetResult();
+        var result = await pending.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Same(response, Assert.IsType<OkObjectResult>(result.Result).Value);
+    }
+
+    [Fact]
+    public async Task GenerateQuoteAsync_DoesNotReturnSuccessWhenPersistenceFails()
+    {
+        var persistence = new DeferredPersistenceService();
+        var controller = new QuotesController(new StubQuoteOrchestrationService(), persistence);
+        var failure = new InvalidOperationException("Database unavailable");
+
+        var pending = controller.GenerateQuoteAsync(CreateRequest(), CancellationToken.None);
+        persistence.Completion.SetException(failure);
+
+        Assert.Same(failure, await Assert.ThrowsAsync<InvalidOperationException>(() => pending));
+    }
+
+    [Fact]
+    public async Task GenerateQuoteAsync_SkipsPersistenceWhenRatingFails()
+    {
+        var persistence = new StubQuotePersistenceService();
+        var controller = new QuotesController(new FailingOrchestrationService(), persistence);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            controller.GenerateQuoteAsync(CreateRequest(), CancellationToken.None));
+
+        Assert.False(persistence.WasCalled);
+    }
+
+    private sealed class FailingOrchestrationService : IQuoteOrchestrationService
+    {
+        public Task<QuoteResponse> GenerateQuotesAsync(QuoteRequest request, CancellationToken cancellationToken) =>
+            Task.FromException<QuoteResponse>(new InvalidOperationException("Rating failed"));
+    }
+
+    private sealed class DeferredPersistenceService : IQuotePersistenceService
+    {
+        public TaskCompletionSource Completion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public QuoteRequest? Request { get; private set; }
+        public QuoteResponse? Response { get; private set; }
+        public CancellationToken Token { get; private set; }
+
+        public Task SaveQuoteRequestAsync(QuoteRequest request, QuoteResponse response, CancellationToken cancellationToken)
+        {
+            Request = request;
+            Response = response;
+            Token = cancellationToken;
+            return Completion.Task;
+        }
+    }
+
     private sealed class StubQuoteOrchestrationService(QuoteResponse? response = null) : IQuoteOrchestrationService
     {
         public bool WasCalled { get; private set; }

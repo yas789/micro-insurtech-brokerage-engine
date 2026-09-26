@@ -21,3 +21,8 @@ failures return an unavailable region; caller cancellation must still propagate.
 Orchestration tests hold scheme tasks open to verify that all schemes start
 before waiting for their results. A failed scheme fails the request rather than
 returning a partial quote list. No timing sleeps or live insurers are required.
+
+Controller tests verify the persistence gate: success is returned only after
+saving completes, persistence failures propagate, and rating failures never
+reach persistence. EF Core InMemory tests cover entity mapping; they do not
+prove SQL Server constraints or transaction rollback.
