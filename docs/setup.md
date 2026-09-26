@@ -69,7 +69,7 @@ export POSTCODES_API_BASE_URL=https://postcodes.io
 From the repository root:
 
 ```text
-dotnet run --project core-engine/MicroInsurTech.CoreEngine.csproj
+dotnet run --project core-engine/MicroInsurTech.CoreEngine.csproj --urls http://localhost:5000
 ```
 
 Useful endpoints:
@@ -87,10 +87,25 @@ That script checks `/health`, sends a valid quote request, and prints persisted 
 
 ## PHP Gateway Local Run
 
-Set the PHP gateway variables, then run the built-in PHP server from the repository root:
+With the core engine running, the recommended way to launch the two browser-facing
+processes together is:
+
+```sh
+BROKER_CORE_API_BASE_URL=http://localhost:5000 python3 scripts/start-local-web.py
+```
+
+This requires PHP 8.1+ with `curl` and Python 3.10+. It checks gateway health,
+serves the frontend at `http://localhost:3000`, and stops both children on Ctrl-C
+or if either process exits. `GATEWAY_PORT` and `FRONTEND_PORT` override local ports;
+the launcher connects the proxy to the gateway port automatically. SQL Server
+and the core engine are managed separately. Configuration is read from exported
+environment variables; `.env.example` is a reference, not an automatically loaded file.
+
+To run the gateway separately, set its variables and use the entrypoint as the
+built-in PHP server router from the repository root:
 
 ```text
-BROKER_CORE_API_BASE_URL=http://localhost:5000 php -S localhost:8080 -t php-gateway/public
+BROKER_CORE_API_BASE_URL=http://localhost:5000 php -S 127.0.0.1:8080 -t php-gateway/public php-gateway/public/index.php
 ```
 
 Useful endpoints:
