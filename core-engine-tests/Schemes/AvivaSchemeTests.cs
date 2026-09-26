@@ -20,15 +20,18 @@ public sealed class AvivaSchemeTests
         Assert.Equal("London", result.Region);
     }
 
-    [Fact]
-    public async Task CalculatePremiumAsync_AppliesPre1920Multiplier()
+    [Theory]
+    [InlineData(1919, 210, "Medium")]
+    [InlineData(1920, 150, "Low")]
+    [InlineData(1921, 150, "Low")]
+    public async Task CalculatePremiumAsync_AppliesMultiplierOnlyBefore1920(int yearBuilt, decimal premium, string risk)
     {
         var scheme = new AvivaScheme();
-        var property = new PropertyEvaluationDto("SW1A 1AA", 1910, 250000.00m, false, "London");
+        var property = new PropertyEvaluationDto("SW1A 1AA", yearBuilt, 250000.00m, false, "London");
 
         var result = await scheme.CalculatePremiumAsync(property);
 
-        Assert.Equal(210.00m, result.PremiumAmount);
-        Assert.Equal("Medium", result.RiskRating);
+        Assert.Equal(premium, result.PremiumAmount);
+        Assert.Equal(risk, result.RiskRating);
     }
 }
