@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../src/BrokerService.php';
+require_once __DIR__ . '/../src/HttpClient.php';
 require_once __DIR__ . '/../src/CurlHttpClient.php';
 require_once __DIR__ . '/../src/GatewayRequestHandler.php';
-require_once __DIR__ . '/../src/HttpClient.php';
 require_once __DIR__ . '/../src/HttpResponse.php';
 require_once __DIR__ . '/../src/QuoteRequestHandler.php';
 

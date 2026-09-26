@@ -26,3 +26,8 @@ Controller tests verify the persistence gate: success is returned only after
 saving completes, persistence failures propagate, and rating failures never
 reach persistence. EF Core InMemory tests cover entity mapping; they do not
 prove SQL Server constraints or transaction rollback.
+
+From `php-gateway/`, run `composer install` and `composer test`. The entrypoint
+regression test boots a separate PHP interpreter without Composer autoloading:
+the gateway explicitly loads its HTTP interface before the cURL implementation.
+This catches startup errors that service-only unit tests can hide.
