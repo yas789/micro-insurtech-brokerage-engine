@@ -26,3 +26,6 @@ build/
 # Logs
 *.log
 logs/
+
+# Python local development tools
+__pycache__/

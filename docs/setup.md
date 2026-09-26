@@ -102,13 +102,20 @@ composer test
 
 ## Frontend Local Run
 
-Serve the static frontend from the repository root:
+Start the PHP gateway above, then serve the frontend with its local proxy from
+the repository root (Python 3.10+):
 
 ```text
-python3 -m http.server 3000 --directory frontend
+python3 scripts/serve-frontend.py
 ```
 
-The frontend posts quote requests to `/api/quotes`, so use it behind the PHP gateway or a local reverse proxy that routes `/api/quotes` to the gateway. Do not point browser code directly at the .NET core engine.
+Open `http://localhost:3000`. The server serves browser assets and proxies
+`/api/*` and `/health` to PHP at `http://127.0.0.1:8080`. Override `FRONTEND_PORT`
+or `GATEWAY_BASE_URL` when needed. The frontend uses same-origin `/api/quotes`;
+no browser CORS setup or internal .NET URL is needed. This Python server is a
+local development tool; production hosting must provide equivalent routing.
+
+Verify the proxy with `python3 -m unittest discover -s scripts/tests`.
 
 Run frontend unit tests from the frontend directory:
 
