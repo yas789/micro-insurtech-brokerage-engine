@@ -93,3 +93,40 @@ jobs:
       - name: Run frontend tests
         working-directory: frontend
         run: npm test
+
+  integration:
+    name: Quote Journey Integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: curl
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Chromium for Playwright
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Run full quote journey integration
+        env:
+          SQLSERVER_SA_PASSWORD: Change_this_password_123!
+        run: python3 scripts/run-integration.py

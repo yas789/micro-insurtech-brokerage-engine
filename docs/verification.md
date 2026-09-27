@@ -68,6 +68,8 @@ npm ci
 npx playwright install chromium
 ```
 
+On Linux CI or a clean Linux workstation, use `npx playwright install --with-deps chromium`.
+
 Then run from the root:
 
 ```sh
