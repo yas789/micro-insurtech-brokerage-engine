@@ -38,25 +38,51 @@ def persisted_rows(email):
     escaped_email = email.replace("'", "''")
     query = f"""SET NOCOUNT ON;
         SELECT c.ClientID, c.FirstName, c.LastName, c.Email,
-               p.PropertyID, p.Postcode, p.YearBuilt, p.RebuildCost, p.IsUnoccupied,
-               p.Region AS PropertyRegion, q.QuoteID, q.UnderwriterName,
-               q.PremiumAmount, q.RiskRating, q.Region
+               p.PropertyID, p.Postcode, p.YearBuilt,
+               CONVERT(varchar(30), p.RebuildCost), CONVERT(int, p.IsUnoccupied),
+               ISNULL(p.Region, '<NULL>'), q.QuoteID, q.UnderwriterName,
+               CONVERT(varchar(30), q.PremiumAmount), q.RiskRating, ISNULL(q.Region, '<NULL>')
         FROM dbo.Clients c
         LEFT JOIN dbo.Properties p ON p.ClientID = c.ClientID
         LEFT JOIN dbo.Quotes q ON q.PropertyID = p.PropertyID
         WHERE c.Email = '{escaped_email}'
-        ORDER BY q.PremiumAmount, q.UnderwriterName
-        FOR JSON PATH, INCLUDE_NULL_VALUES;"""
+        ORDER BY q.PremiumAmount, q.UnderwriterName;"""
     environment = dict(os.environ, SQLCMDPASSWORD=os.getenv("SQLSERVER_SA_PASSWORD", "Change_this_password_123!"))
-    result = subprocess.run([
+    command = [
         "docker", "exec", "-e", "SQLCMDPASSWORD",
         os.getenv("SQLSERVER_CONTAINER_NAME", "micro-insurtech-sql"),
         "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-C", "-b",
         "-d", os.getenv("SQLSERVER_DATABASE_NAME", "MicroInsurTech"),
-        "-h", "-1", "-y", "0", "-w", "65535", "-Q", query,
-    ], env=environment, capture_output=True, text=True, check=True, timeout=30)
-    # sqlcmd can split a long FOR JSON result across output rows.
-    return json.loads("".join(result.stdout.splitlines()).strip())
+        "-h", "-1", "-s", "|", "-W", "-y", "0", "-w", "65535", "-Q", query,
+    ]
+    result = subprocess.run(command, env=environment, capture_output=True, text=True, timeout=30)
+    if result.returncode != 0:
+        raise RuntimeError(f"SQL lookup failed: {result.stderr or result.stdout}")
+    rows = []
+    for line in result.stdout.splitlines():
+        if not line.strip() or line.startswith("("):
+            continue
+        fields = line.split("|")
+        if len(fields) != 15:
+            raise RuntimeError(f"Unexpected SQL row shape: {line}")
+        rows.append({
+            "ClientID": int(fields[0]),
+            "FirstName": fields[1],
+            "LastName": fields[2],
+            "Email": fields[3],
+            "PropertyID": int(fields[4]),
+            "Postcode": fields[5],
+            "YearBuilt": int(fields[6]),
+            "RebuildCost": float(fields[7]),
+            "IsUnoccupied": fields[8] == "1",
+            "PropertyRegion": None if fields[9] == "<NULL>" else fields[9],
+            "QuoteID": int(fields[10]),
+            "UnderwriterName": fields[11],
+            "PremiumAmount": float(fields[12]),
+            "RiskRating": fields[13],
+            "Region": None if fields[14] == "<NULL>" else fields[14],
+        })
+    return rows
 
 
 def verify_quotes(quotes):
