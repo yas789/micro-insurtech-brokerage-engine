@@ -44,11 +44,11 @@ def wait_for_health(url, expected, processes):
 
 
 def main():
-    for executable in ("dotnet", "php", "docker"):
+    for executable in ("dotnet", "php", "docker", "npm"):
         if not shutil.which(executable):
             raise RuntimeError(f"{executable} is required on PATH")
     # Fixed, documented integration ports prevent connecting to an unrelated service.
-    for port in (3000, 5000, 8080, 8081, 5099):
+    for port in (3000, 3001, 5000, 8080, 8081, 5099):
         with socket.socket() as probe:
             probe.bind(("127.0.0.1", port))
     environment = dict(os.environ)
@@ -64,6 +64,7 @@ def main():
         "GATEWAY_PORT": "8080",
         "FRONTEND_PORT": "3000",
         "FRONTEND_BASE_URL": "http://127.0.0.1:3000",
+        "UNAVAILABLE_FRONTEND_BASE_URL": "http://127.0.0.1:3001",
     })
     password = environment["SQLSERVER_SA_PASSWORD"].replace('"', '""')
     environment["ConnectionStrings__BrokerDatabase"] = (
@@ -97,15 +98,19 @@ def main():
         # Port 1 is deliberately unavailable; no mock core response is used.
         start("unavailable-gateway", ["php", "-S", "127.0.0.1:8081", "-t", "php-gateway/public", "php-gateway/public/index.php"],
               {"BROKER_CORE_API_BASE_URL": "http://127.0.0.1:1", "BROKER_CORE_API_TIMEOUT_SECONDS": "1"})
+        start("unavailable-frontend", [sys.executable, "scripts/serve-frontend.py"],
+              {"FRONTEND_PORT": "3001", "GATEWAY_BASE_URL": "http://127.0.0.1:8081"})
         for url, expected in (
             ("http://127.0.0.1:5099/health", "Postcode fixture running"),
             ("http://127.0.0.1:5000/health", "Core engine running"),
             ("http://127.0.0.1:3000/health", "PHP gateway running"),
             ("http://127.0.0.1:8081/health", "PHP gateway running"),
+            ("http://127.0.0.1:3001/health", "PHP gateway running"),
         ):
             wait_for_health(url, expected, processes)
-        run(sys.executable, "scripts/verify-quote-journey.py", "--postcode-fixture",
+        run(sys.executable, "scripts/verify-quote-journey.py", "--postcode-fixture", "--check-initializer",
             "--unavailable-gateway-url", "http://127.0.0.1:8081")
+        run("npm", "run", "test:e2e", cwd=ROOT / "frontend")
     print("Integration checks passed. Services stopped; SQL container and sample records are preserved.")
 
 

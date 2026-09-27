@@ -90,13 +90,23 @@ def main():
     parser.add_argument("--base-url", default=os.getenv("FRONTEND_BASE_URL", "http://127.0.0.1:3000"))
     parser.add_argument("--postcode-fixture", action="store_true", help="Require deterministic London and 503 fixture cases")
     parser.add_argument("--unavailable-gateway-url", help="A second gateway configured to point at an unavailable core API")
+    parser.add_argument("--verify-saved-response", action="store_true", help="Check browser email, postcode, and quotes JSON from stdin against SQL")
+    parser.add_argument("--check-initializer", action="store_true", help="Re-run database initialization and verify existing samples survive")
     args = parser.parse_args()
+
+    if args.verify_saved_response:
+        saved = json.load(sys.stdin)
+        verify_quotes(saved["quotes"])
+        verify_persistence(saved["email"], saved["quotes"], saved["postcode"])
+        print("PASS: browser results match persisted SQL records")
+        return
 
     status, health = request(args.base_url, path="/health")
     check(status == 200 and health == {"status": "PHP gateway running"}, "Gateway health failed")
     cases = [("SW1A 1AA", "London")]
     if args.postcode_fixture:
         cases.append(("ZZ99 9ZZ", None))
+    saved_samples = []
     for postcode, region in cases:
         email = f"smoke-{uuid4().hex}@example.com"
         status, body = request(args.base_url, payload(email, postcode))
@@ -106,6 +116,7 @@ def main():
         if args.postcode_fixture:
             check(all(quote.get("region") == region for quote in quotes), "Postcode enrichment/fallback mismatch")
         verify_persistence(email, quotes, postcode)
+        saved_samples.append((email, quotes, postcode))
         print(f"PASS: {postcode} returned three ranked quotes and matching SQL records ({email})")
 
     status, body = request(args.base_url, {})
@@ -124,6 +135,13 @@ def main():
         check(status == 502 and body == {"error": "Core engine is unavailable."}, "Expected safe core-unavailable response")
         check(persisted_rows(email) == [], "Unavailable core must not persist a client")
         print("PASS: core unavailability produces a safe gateway error")
+
+    if args.check_initializer:
+        from pathlib import Path
+        subprocess.run(["sh", str(Path(__file__).resolve().with_name("apply-local-schema.sh"))], check=True, timeout=30)
+        for email, quotes, postcode in saved_samples:
+            verify_persistence(email, quotes, postcode)
+        print("PASS: repeated schema initialization preserves saved records")
 
 
 if __name__ == "__main__":

@@ -59,7 +59,16 @@ or set to a value other than `local` so transport details are not exposed.
 
 ## Repeatable integration runner
 
-With Docker (Linux containers), .NET 8, PHP 8.1+ with cURL, and Python 3.10+:
+With Docker (Linux containers), .NET 8, PHP 8.1+ with cURL, Python 3.10+, and Node 22+:
+
+First install browser-test dependencies from `frontend/`:
+
+```sh
+npm ci
+npx playwright install chromium
+```
+
+Then run from the root:
 
 ```sh
 python3 scripts/run-integration.py
@@ -67,7 +76,7 @@ python3 scripts/run-integration.py
 
 The runner starts/readies SQL Server, initializes a separate
 `MicroInsurTechVerification` database by default, builds the core API, and starts
-the real PHP gateway and frontend proxy. Ports 3000, 5000, 8080, 8081, and 5099
+the real PHP gateway and frontend proxy. Ports 3000, 3001, 5000, 8080, 8081, and 5099
 must be free. Existing `SQLSERVER_*` variables select the container, credentials,
 database, and SQL host port. SQL Server's container image requires an amd64 Linux
 runtime; on Apple Silicon use a Docker setup supporting that image or run CI.
@@ -82,3 +91,13 @@ Child application processes stop on completion/failure; diagnostics are written
 to ignored `logs/integration/`. The SQL container and uniquely named sample
 records remain for inspection. Re-runs preserve previous data. This local/CI
 runner is not a production deployment command.
+
+The runner also re-runs schema initialization and confirms the original samples
+survive. Playwright then drives Chromium through the actual form: successful
+London quotes, unavailable postcode enrichment, backend validation errors, and
+core API unavailability (via a second frontend on port 3001). Successful browser
+responses are checked against their own SQL records using the verifier's
+`--verify-saved-response` stdin mode. API responses are not mocked in the browser.
+Failures retain traces/screenshots in `frontend/test-results/` and an HTML report
+in `frontend/playwright-report/`. To run just browser tests against the prepared
+fixture stack, use `npm run test:e2e` in `frontend/`; `npm test` remains unit-only.
