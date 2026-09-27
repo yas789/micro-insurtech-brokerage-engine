@@ -53,7 +53,7 @@ def persisted_rows(email):
         os.getenv("SQLSERVER_CONTAINER_NAME", "micro-insurtech-sql"),
         "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-C", "-b",
         "-d", os.getenv("SQLSERVER_DATABASE_NAME", "MicroInsurTech"),
-        "-h", "-1", "-s", "|", "-W", "-y", "0", "-w", "65535", "-Q", query,
+        "-h", "-1", "-s", "|", "-W", "-w", "65535", "-Q", query,
     ]
     result = subprocess.run(command, env=environment, capture_output=True, text=True, timeout=30)
     if result.returncode != 0:
