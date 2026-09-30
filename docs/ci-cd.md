@@ -25,6 +25,9 @@ Current checks:
 - Composer validation runs in strict mode, so `php-gateway/composer.json` must include required metadata such as `license`.
 - Install PHP gateway development dependencies and run PHPUnit gateway tests.
 - Install frontend dependencies with `npm ci` and run Vitest quote flow tests.
+- Install Playwright Chromium and run the full deterministic quote journey
+  integration runner: browser -> frontend proxy -> PHP gateway -> .NET core ->
+  SQL Server, with a local postcode fixture and SQL record assertions.
 
 Future checks:
 

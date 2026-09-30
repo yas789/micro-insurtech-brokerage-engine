@@ -71,6 +71,43 @@ public sealed class QuotePersistenceServiceTests
     }
 
     [Fact]
+    public async Task SaveQuoteRequestAsync_SavesClientAndPropertyWhenNoQuotesReturned()
+    {
+        await using var dbContext = CreateDbContext();
+        var service = new QuotePersistenceService(dbContext);
+        var request = new QuoteRequest(
+            new ClientDto("Jane", "Broker", "jane@example.com"),
+            new PropertyEvaluationDto("SW1A 1AA", 1910, 750000.00m, false));
+        var response = new QuoteResponse(Array.Empty<QuoteResult>());
+
+        await service.SaveQuoteRequestAsync(request, response, CancellationToken.None);
+
+        Assert.Equal(1, await dbContext.Clients.CountAsync());
+        Assert.Equal(1, await dbContext.Properties.CountAsync());
+        Assert.Equal(0, await dbContext.Quotes.CountAsync());
+        Assert.Null((await dbContext.Properties.SingleAsync()).Region);
+    }
+
+    [Fact]
+    public async Task SaveQuoteRequestAsync_UsesFirstNonEmptyQuoteRegionForProperty()
+    {
+        await using var dbContext = CreateDbContext();
+        var service = new QuotePersistenceService(dbContext);
+        var request = new QuoteRequest(
+            new ClientDto("Jane", "Broker", "jane@example.com"),
+            new PropertyEvaluationDto("SW1A 1AA", 1910, 750000.00m, false));
+        var response = new QuoteResponse(new[]
+        {
+            new QuoteResult("Aviva", 950.00m, "Low", null),
+            new QuoteResult("AXA", 1000.00m, "Medium", "London"),
+        });
+
+        await service.SaveQuoteRequestAsync(request, response, CancellationToken.None);
+
+        Assert.Equal("London", (await dbContext.Properties.SingleAsync()).Region);
+    }
+
+    [Fact]
     public async Task SaveQuoteRequestAsync_RejectsMissingProperty()
     {
         await using var dbContext = CreateDbContext();

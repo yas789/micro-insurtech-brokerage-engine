@@ -22,7 +22,12 @@ composer.lock
 node_modules/
 dist/
 build/
+playwright-report/
+test-results/
 
 # Logs
 *.log
 logs/
+
+# Python local development tools
+__pycache__/

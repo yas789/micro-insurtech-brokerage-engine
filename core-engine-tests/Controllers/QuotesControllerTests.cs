@@ -42,6 +42,42 @@ public sealed class QuotesControllerTests
         Assert.False(persistenceService.WasCalled);
     }
 
+    [Fact]
+    public async Task GenerateQuoteAsync_ReturnsBadRequestWhenRequestIsMissing()
+    {
+        var orchestrationService = new StubQuoteOrchestrationService();
+        var persistenceService = new StubQuotePersistenceService();
+        var controller = new QuotesController(orchestrationService, persistenceService);
+
+        var result = await controller.GenerateQuoteAsync(null!, CancellationToken.None);
+
+        Assert.IsType<BadRequestObjectResult>(result.Result);
+        Assert.False(orchestrationService.WasCalled);
+        Assert.False(persistenceService.WasCalled);
+    }
+
+    [Theory]
+    [InlineData("firstName")]
+    [InlineData("lastName")]
+    [InlineData("email")]
+    [InlineData("postcode")]
+    [InlineData("yearBuiltTooOld")]
+    [InlineData("yearBuiltTooNew")]
+    [InlineData("rebuildCost")]
+    public async Task GenerateQuoteAsync_ReturnsBadRequestAndSkipsSideEffectsForInvalidFields(string field)
+    {
+        var orchestrationService = new StubQuoteOrchestrationService();
+        var persistenceService = new StubQuotePersistenceService();
+        var controller = new QuotesController(orchestrationService, persistenceService);
+        var request = CreateRequestWithInvalidField(field);
+
+        var result = await controller.GenerateQuoteAsync(request, CancellationToken.None);
+
+        Assert.IsType<BadRequestObjectResult>(result.Result);
+        Assert.False(orchestrationService.WasCalled);
+        Assert.False(persistenceService.WasCalled);
+    }
+
     [Theory]
     [InlineData("firstName")]
     [InlineData("lastName")]
@@ -81,6 +117,73 @@ public sealed class QuotesControllerTests
         Assert.True(persistenceService.WasCalled);
     }
 
+    [Fact]
+    public async Task GenerateQuoteAsync_WaitsForPersistenceBeforeReturningSuccess()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var persistence = new DeferredPersistenceService();
+        var response = new QuoteResponse(new[] { new QuoteResult("Test", 100, "Low", "London") });
+        var controller = new QuotesController(new StubQuoteOrchestrationService(response), persistence);
+        var request = CreateRequest();
+
+        var pending = controller.GenerateQuoteAsync(request, cancellation.Token);
+
+        Assert.False(pending.IsCompleted);
+        Assert.Same(request, persistence.Request);
+        Assert.Same(response, persistence.Response);
+        Assert.Equal(cancellation.Token, persistence.Token);
+        persistence.Completion.SetResult();
+        var result = await pending.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Same(response, Assert.IsType<OkObjectResult>(result.Result).Value);
+    }
+
+    [Fact]
+    public async Task GenerateQuoteAsync_DoesNotReturnSuccessWhenPersistenceFails()
+    {
+        var persistence = new DeferredPersistenceService();
+        var controller = new QuotesController(new StubQuoteOrchestrationService(), persistence);
+        var failure = new InvalidOperationException("Database unavailable");
+
+        var pending = controller.GenerateQuoteAsync(CreateRequest(), CancellationToken.None);
+        persistence.Completion.SetException(failure);
+
+        Assert.Same(failure, await Assert.ThrowsAsync<InvalidOperationException>(() => pending));
+    }
+
+    [Fact]
+    public async Task GenerateQuoteAsync_SkipsPersistenceWhenRatingFails()
+    {
+        var persistence = new StubQuotePersistenceService();
+        var controller = new QuotesController(new FailingOrchestrationService(), persistence);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            controller.GenerateQuoteAsync(CreateRequest(), CancellationToken.None));
+
+        Assert.False(persistence.WasCalled);
+    }
+
+    private sealed class FailingOrchestrationService : IQuoteOrchestrationService
+    {
+        public Task<QuoteResponse> GenerateQuotesAsync(QuoteRequest request, CancellationToken cancellationToken) =>
+            Task.FromException<QuoteResponse>(new InvalidOperationException("Rating failed"));
+    }
+
+    private sealed class DeferredPersistenceService : IQuotePersistenceService
+    {
+        public TaskCompletionSource Completion { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public QuoteRequest? Request { get; private set; }
+        public QuoteResponse? Response { get; private set; }
+        public CancellationToken Token { get; private set; }
+
+        public Task SaveQuoteRequestAsync(QuoteRequest request, QuoteResponse response, CancellationToken cancellationToken)
+        {
+            Request = request;
+            Response = response;
+            Token = cancellationToken;
+            return Completion.Task;
+        }
+    }
+
     private sealed class StubQuoteOrchestrationService(QuoteResponse? response = null) : IQuoteOrchestrationService
     {
         public bool WasCalled { get; private set; }
@@ -104,15 +207,32 @@ public sealed class QuotesControllerTests
         };
     }
 
+    private static QuoteRequest CreateRequestWithInvalidField(string field)
+    {
+        return field switch
+        {
+            "firstName" => CreateRequest(firstName: " "),
+            "lastName" => CreateRequest(lastName: " "),
+            "email" => CreateRequest(email: "not-an-email"),
+            "postcode" => CreateRequest(postcode: " "),
+            "yearBuiltTooOld" => CreateRequest(yearBuilt: 1499),
+            "yearBuiltTooNew" => CreateRequest(yearBuilt: 2101),
+            "rebuildCost" => CreateRequest(rebuildCost: 0),
+            _ => throw new ArgumentOutOfRangeException(nameof(field), field, "Unsupported field."),
+        };
+    }
+
     private static QuoteRequest CreateRequest(
         string firstName = "Jane",
         string lastName = "Broker",
         string email = "jane@example.com",
-        string postcode = "SW1A 1AA")
+        string postcode = "SW1A 1AA",
+        int yearBuilt = 1910,
+        decimal rebuildCost = 750000.00m)
     {
         return new QuoteRequest(
             new ClientDto(firstName, lastName, email),
-            new PropertyEvaluationDto(postcode, 1910, 750000.00m, false));
+            new PropertyEvaluationDto(postcode, yearBuilt, rebuildCost, false));
     }
 
     private sealed class StubQuotePersistenceService : IQuotePersistenceService

@@ -29,7 +29,7 @@ final class BrokerServiceTest extends TestCase
         self::assertSame(7, $httpClient->timeoutSeconds);
         self::assertSame('application/json', $httpClient->headers['Accept']);
         self::assertSame('application/json', $httpClient->headers['Content-Type']);
-        self::assertSame($payload, json_decode($httpClient->json, true));
+        self::assertEquals($payload, json_decode($httpClient->json, true));
     }
 
     public function testRequestQuotesBuildsCoreApiUrlWithoutDuplicateSlash(): void

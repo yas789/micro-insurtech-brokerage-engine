@@ -140,7 +140,7 @@ export function formatCurrency(value) {
 }
 
 export function formatError(body) {
-  if (Array.isArray(body?.errors)) {
+  if (Array.isArray(body?.errors) && body.errors.length > 0) {
     return body.errors.join(' ');
   }
 
