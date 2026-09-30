@@ -6,11 +6,13 @@ namespace MicroInsurTech.CoreEngine.Tests.Schemes;
 
 public sealed class NichePropertyCoverTests
 {
-    [Fact]
-    public async Task CalculatePremiumAsync_ReturnsBasePremiumBelowHighRebuildCostThreshold()
+    [Theory]
+    [InlineData(499999.99)]
+    [InlineData(500000.00)]
+    public async Task CalculatePremiumAsync_ReturnsBasePremiumAtOrBelowThreshold(decimal rebuildCost)
     {
         var scheme = new NichePropertyCover();
-        var property = new PropertyEvaluationDto("EH1 1YZ", 1985, 500000.00m, false, "Scotland");
+        var property = new PropertyEvaluationDto("EH1 1YZ", 1985, rebuildCost, false, "Scotland");
 
         var result = await scheme.CalculatePremiumAsync(property);
 
