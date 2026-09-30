@@ -8,6 +8,17 @@ namespace MicroInsurTech.CoreEngine.Tests.Controllers;
 
 public sealed class QuotesControllerTests
 {
+    private const string ValidFirstName = "Jane";
+    private const string ValidLastName = "Broker";
+    private const string ValidEmail = "jane@example.com";
+    private const string ValidPostcode = "SW1A 1AA";
+    private const int ValidYearBuilt = 1910;
+    private const decimal ValidRebuildCost = 750000.00m;
+    private const string ValidRegion = "London";
+    private const string ValidRiskRating = "Low";
+    private const decimal ValidPremiumAmount = 100.00m;
+    private const string ValidUnderwriterName = "Test";
+
     [Fact]
     public async Task GenerateQuoteAsync_ReturnsBadRequestWhenClientIsMissing()
     {
@@ -16,7 +27,7 @@ public sealed class QuotesControllerTests
         var controller = new QuotesController(orchestrationService, persistenceService);
         var request = new QuoteRequest(
             null,
-            new PropertyEvaluationDto("SW1A 1AA", 1910, 750000.00m, false));
+            new PropertyEvaluationDto(ValidPostcode, ValidYearBuilt, ValidRebuildCost, false));
 
         var result = await controller.GenerateQuoteAsync(request, CancellationToken.None);
 
@@ -32,7 +43,7 @@ public sealed class QuotesControllerTests
         var persistenceService = new StubQuotePersistenceService();
         var controller = new QuotesController(orchestrationService, persistenceService);
         var request = new QuoteRequest(
-            new ClientDto("Jane", "Broker", "jane@example.com"),
+            new ClientDto(ValidFirstName, ValidLastName, ValidEmail),
             null);
 
         var result = await controller.GenerateQuoteAsync(request, CancellationToken.None);
@@ -102,13 +113,13 @@ public sealed class QuotesControllerTests
     {
         var expectedResponse = new QuoteResponse(new[]
         {
-            new QuoteResult("Test", 100.00m, "Low", "London"),
+            new QuoteResult(ValidUnderwriterName, ValidPremiumAmount, ValidRiskRating, ValidRegion),
         });
         var persistenceService = new StubQuotePersistenceService();
         var controller = new QuotesController(new StubQuoteOrchestrationService(expectedResponse), persistenceService);
         var request = new QuoteRequest(
-            new ClientDto("Jane", "Broker", "jane@example.com"),
-            new PropertyEvaluationDto("SW1A 1AA", 1910, 750000.00m, false));
+            new ClientDto(ValidFirstName, ValidLastName, ValidEmail),
+            new PropertyEvaluationDto(ValidPostcode, ValidYearBuilt, ValidRebuildCost, false));
 
         var result = await controller.GenerateQuoteAsync(request, CancellationToken.None);
 
@@ -223,12 +234,12 @@ public sealed class QuotesControllerTests
     }
 
     private static QuoteRequest CreateRequest(
-        string firstName = "Jane",
-        string lastName = "Broker",
-        string email = "jane@example.com",
-        string postcode = "SW1A 1AA",
-        int yearBuilt = 1910,
-        decimal rebuildCost = 750000.00m)
+        string firstName = ValidFirstName,
+        string lastName = ValidLastName,
+        string email = ValidEmail,
+        string postcode = ValidPostcode,
+        int yearBuilt = ValidYearBuilt,
+        decimal rebuildCost = ValidRebuildCost)
     {
         return new QuoteRequest(
             new ClientDto(firstName, lastName, email),

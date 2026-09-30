@@ -8,14 +8,21 @@ namespace MicroInsurTech.CoreEngine.Tests.Services;
 
 public sealed class QuotePersistenceServiceTests
 {
+    private const string ValidFirstName = "Jane";
+    private const string ValidLastName = "Broker";
+    private const string ValidEmail = "jane@example.com";
+    private const string ValidPostcode = "SW1A 1AA";
+    private const int ValidYearBuilt = 1910;
+    private const decimal ValidRebuildCost = 750000.00m;
+
     [Fact]
     public async Task SaveQuoteRequestAsync_SavesClientPropertyAndQuotes()
     {
         await using var dbContext = CreateDbContext();
         var service = new QuotePersistenceService(dbContext);
         var request = new QuoteRequest(
-            new ClientDto(" Jane ", " Broker ", " jane@example.com "),
-            new PropertyEvaluationDto(" SW1A 1AA ", 1910, 750000.00m, false));
+            new ClientDto($" {ValidFirstName} ", $" {ValidLastName} ", $" {ValidEmail} "),
+            new PropertyEvaluationDto($" {ValidPostcode} ", ValidYearBuilt, ValidRebuildCost, false));
         var response = new QuoteResponse(new[]
         {
             new QuoteResult("Aviva", 950.00m, "Low", "London"),
@@ -28,14 +35,14 @@ public sealed class QuotePersistenceServiceTests
         var property = await dbContext.Properties.SingleAsync();
         var quotes = await dbContext.Quotes.OrderBy(quote => quote.PremiumAmount).ToArrayAsync();
 
-        Assert.Equal("Jane", client.FirstName);
-        Assert.Equal("Broker", client.LastName);
-        Assert.Equal("jane@example.com", client.Email);
+        Assert.Equal(ValidFirstName, client.FirstName);
+        Assert.Equal(ValidLastName, client.LastName);
+        Assert.Equal(ValidEmail, client.Email);
         Assert.Equal(client.ClientId, property.ClientId);
-        Assert.Equal("SW1A 1AA", property.Postcode);
+        Assert.Equal(ValidPostcode, property.Postcode);
         Assert.Equal("London", property.Region);
-        Assert.Equal(1910, property.YearBuilt);
-        Assert.Equal(750000.00m, property.RebuildCost);
+        Assert.Equal(ValidYearBuilt, property.YearBuilt);
+        Assert.Equal(ValidRebuildCost, property.RebuildCost);
         Assert.Collection(
             quotes,
             quote =>
@@ -63,7 +70,7 @@ public sealed class QuotePersistenceServiceTests
         var service = new QuotePersistenceService(dbContext);
         var request = new QuoteRequest(
             null,
-            new PropertyEvaluationDto("SW1A 1AA", 1910, 750000.00m, false));
+            new PropertyEvaluationDto(ValidPostcode, ValidYearBuilt, ValidRebuildCost, false));
         var response = new QuoteResponse(Array.Empty<QuoteResult>());
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
@@ -113,7 +120,7 @@ public sealed class QuotePersistenceServiceTests
         await using var dbContext = CreateDbContext();
         var service = new QuotePersistenceService(dbContext);
         var request = new QuoteRequest(
-            new ClientDto("Jane", "Broker", "jane@example.com"),
+            new ClientDto(ValidFirstName, ValidLastName, ValidEmail),
             null);
         var response = new QuoteResponse(Array.Empty<QuoteResult>());
 
