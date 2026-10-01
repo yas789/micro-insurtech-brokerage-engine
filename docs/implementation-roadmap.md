@@ -105,7 +105,10 @@ Completed:
 - Static quote form captures client identity and property risk fields.
 - Native JavaScript submits JSON to `/api/quotes` for gateway-backed quote generation.
 - Loading, success, and error states are displayed with accessible live status text.
-- Quote cards render underwriter name, premium, risk rating, region, and an `Accept Cover` action.
+- Quote cards render underwriter name, premium, risk rating, and region.
+- `Accept Cover` is disabled and labelled unavailable, with a visible explanation
+  that the current journey supports quote comparison only. Cover acceptance is
+  deferred until an acceptance flow and backend endpoint are implemented.
 
 Acceptance criteria:
 
@@ -113,7 +116,7 @@ Acceptance criteria:
 - Submission uses native `fetch()`.
 - Loading state communicates quote retrieval from three underwriters.
 - Quote matrix renders options from lowest to highest premium.
-- Each option includes an `Accept Cover` button.
+- Each option clearly shows cover acceptance is unavailable; no enabled inert action is presented.
 
 ## Phase 5: Hardening
 

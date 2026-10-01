@@ -38,6 +38,13 @@ for (const [postcode, region] of [['SW1A 1AA', 'London'], ['ZZ99 9ZZ', null]]) {
     await expect(page.locator('.quote-card')).toHaveCount(3);
     for (const card of await page.locator('.quote-card').all()) {
       await expect(card).toContainText(region || 'Unavailable');
+      const acceptButton = card.getByRole('button', { name: 'Accept Cover — unavailable' });
+      await expect(acceptButton).toBeDisabled();
+      await expect(acceptButton).toHaveAccessibleDescription(
+        'Cover acceptance is not available yet. You can compare quotes only.',
+      );
+      await expect(card.locator('.acceptance-notice')).toBeVisible();
+      await acceptButton.evaluate((button) => button.click());
     }
     expect(quotes.every((quote) => quote.region === region)).toBe(true);
     expect(apiRequests).toEqual([`${baseURL}/api/quotes`]);

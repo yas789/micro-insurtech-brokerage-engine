@@ -108,6 +108,9 @@ London quotes, unavailable postcode enrichment, backend validation errors, and
 core API unavailability (via a second frontend on port 3001). Successful browser
 responses are checked against their own SQL records using the verifier's
 `--verify-saved-response` stdin mode. API responses are not mocked in the browser.
+The successful browser cases also verify each cover-acceptance button is disabled,
+has a visible explanation and accessible description, and triggers no additional
+API request when its DOM click method is invoked.
 Failures retain traces/screenshots in `frontend/test-results/` and an HTML report
 in `frontend/playwright-report/`. To run just browser tests against the prepared
 fixture stack, use `npm run test:e2e` in `frontend/`; `npm test` remains unit-only.
