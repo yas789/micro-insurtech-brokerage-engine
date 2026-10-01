@@ -38,8 +38,14 @@ Stores the submitted property details and the resolved postcode region when avai
 - `Postcode`, maximum `16` characters.
 - `Region`
 - `YearBuilt`
-- `RebuildCost`
+- `RebuildCost`, from `0.01` to `99999999.99`, with at most two decimal places.
 - `IsUnoccupied`
+
+The frontend mirrors the `DECIMAL(10,2)` range and penny precision. Both the PHP
+gateway and core API reject costs above the maximum or with fractional pennies
+before rating or persistence, returning `400` and a validation message. Values
+are rejected rather than silently rounded, including values that would round
+beyond the SQL maximum or down to zero.
 
 ### `Quotes`
 

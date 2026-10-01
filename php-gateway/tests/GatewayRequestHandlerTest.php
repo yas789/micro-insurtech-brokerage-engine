@@ -87,6 +87,37 @@ final class GatewayRequestHandlerTest extends TestCase
         self::assertSame('http://core-engine.local/api/quotes', $httpClient->url);
     }
 
+    /** @dataProvider rebuildCostProvider */
+    public function testHandleChecksRebuildCostBeforeForwarding(float|string $cost, ?string $error): void
+    {
+        $client = new GatewayFakeHttpClient(new HttpResponse(200, '{"quotes":[]}'));
+        $handler = $this->createHandler($client);
+        $payload = QuotePayloadFactory::validPayload();
+        $payload['property']['rebuildCost'] = $cost;
+
+        $response = $handler->handle('POST', '/api/quotes', json_encode($payload, JSON_THROW_ON_ERROR));
+
+        if ($error === null) {
+            self::assertSame(200, $response['statusCode']);
+            self::assertSame('http://core-engine.local/api/quotes', $client->url);
+        } else {
+            self::assertSame(400, $response['statusCode']);
+            self::assertSame(['errors' => [$error]], $response['body']);
+            self::assertSame('', $client->url);
+        }
+    }
+
+    public static function rebuildCostProvider(): iterable
+    {
+        yield 'minimum' => [0.01, null];
+        yield 'maximum' => [99999999.99, null];
+        yield 'first overflowing penny' => [100000000.00, 'Property rebuild cost must be 99999999.99 or less.'];
+        yield 'rounding overflow' => [99999999.995, 'Property rebuild cost must be 99999999.99 or less.'];
+        yield 'fractional penny' => [750000.001, 'Property rebuild cost must have at most two decimal places.'];
+        yield 'rounds to zero' => [0.001, 'Property rebuild cost must have at most two decimal places.'];
+        yield 'non-finite numeric string' => ['1e309', 'Property rebuild cost must be 99999999.99 or less.'];
+    }
+
     private function createHandler(?GatewayFakeHttpClient $httpClient = null): GatewayRequestHandler
     {
         return new GatewayRequestHandler(
