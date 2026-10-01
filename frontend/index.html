@@ -4,12 +4,75 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Micro-InsurTech Brokerage Engine</title>
+    <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <main>
-      <h1>Micro-InsurTech Brokerage Engine</h1>
-      <p>Frontend scaffold only. Quote journey implementation pending.</p>
+    <main class="shell">
+      <section class="hero" aria-labelledby="page-title">
+        <p class="eyebrow">Commercial property broker portal</p>
+        <h1 id="page-title">Compare specialist property insurance quotes in one request.</h1>
+        <p class="intro">Submit client and risk details through the PHP gateway. The core engine enriches the postcode, rates three schemes, and returns quotes ordered by premium.</p>
+      </section>
+
+      <section class="workspace" aria-label="Quote workspace">
+        <form id="quote-form" class="quote-form">
+          <div class="form-section">
+            <div>
+              <p class="step">Step 1</p>
+              <h2>Client Details</h2>
+            </div>
+            <label>
+              First name
+              <input name="firstName" autocomplete="given-name" required maxlength="100">
+            </label>
+            <label>
+              Last name
+              <input name="lastName" autocomplete="family-name" required maxlength="100">
+            </label>
+            <label>
+              Email
+              <input name="email" type="email" autocomplete="email" required maxlength="254">
+            </label>
+          </div>
+
+          <div class="form-section">
+            <div>
+              <p class="step">Step 2</p>
+              <h2>Property Risk</h2>
+            </div>
+            <label>
+              Postcode
+              <input name="postcode" autocomplete="postal-code" required maxlength="16" placeholder="SW1A 1AA">
+            </label>
+            <label>
+              Year built
+              <input name="yearBuilt" type="number" required min="1500" max="2100" inputmode="numeric">
+            </label>
+            <label>
+              Rebuild cost
+              <input name="rebuildCost" type="number" required min="1" step="0.01" inputmode="decimal" placeholder="750000">
+            </label>
+            <label class="checkbox-row">
+              <input name="isUnoccupied" type="checkbox">
+              <span>Property is currently unoccupied</span>
+            </label>
+          </div>
+
+          <button id="submit-button" type="submit">Generate quotes</button>
+          <p id="form-status" class="status" role="status" aria-live="polite"></p>
+        </form>
+
+        <section class="results-panel" aria-labelledby="results-title">
+          <div class="results-heading">
+            <p class="step">Step 3</p>
+            <h2 id="results-title">Quote Comparison</h2>
+          </div>
+          <div id="quote-results" class="empty-state">
+            Submit a property risk to view ranked underwriter options.
+          </div>
+        </section>
+      </section>
     </main>
-    <script src="app.js" defer></script>
+    <script src="app.js" type="module"></script>
   </body>
 </html>

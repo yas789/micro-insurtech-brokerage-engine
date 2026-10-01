@@ -62,6 +62,71 @@ jobs:
         working-directory: php-gateway
         run: composer validate --strict --no-check-lock
 
+      - name: Install PHP dependencies
+        working-directory: php-gateway
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
       - name: Check PHP syntax
         run: |
           find php-gateway -name '*.php' -print -exec php -l {} \;
+
+      - name: Run PHP tests
+        working-directory: php-gateway
+        run: composer test
+
+  frontend:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test
+
+  integration:
+    name: Quote Journey Integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: curl
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Chromium for Playwright
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Run full quote journey integration
+        env:
+          SQLSERVER_SA_PASSWORD: Change_this_password_123!
+        run: python3 scripts/run-integration.py
