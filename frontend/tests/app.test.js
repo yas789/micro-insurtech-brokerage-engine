@@ -66,6 +66,30 @@ describe('quote frontend', () => {
     expect(results.textContent).toContain('Accept Cover');
   });
 
+  it('clearly disables deferred cover acceptance on every quote', () => {
+    const results = document.createElement('div');
+    renderQuotes(results, [
+      { underwriterName: 'AvivaScheme', premiumAmount: 210 },
+      { underwriterName: 'AXAScheme', premiumAmount: 180 },
+    ]);
+
+    const descriptions = new Set();
+    for (const card of results.querySelectorAll('.quote-card')) {
+      const button = card.querySelector('button');
+      expect(button.disabled).toBe(true);
+      expect(button.textContent).toBe('Accept Cover — unavailable');
+      const descriptionId = button.getAttribute('aria-describedby');
+      descriptions.add(descriptionId);
+      expect(card.querySelector(`#${descriptionId}`).textContent)
+        .toBe('Cover acceptance is not available yet. You can compare quotes only.');
+      const onClick = vi.fn();
+      button.addEventListener('click', onClick);
+      button.click();
+      expect(onClick).not.toHaveBeenCalled();
+    }
+    expect(descriptions.size).toBe(2);
+  });
+
   it('renders fallback values for incomplete quote results', () => {
     const results = document.createElement('div');
 

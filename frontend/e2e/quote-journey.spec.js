@@ -38,6 +38,13 @@ for (const [postcode, region] of [['SW1A 1AA', 'London'], ['ZZ99 9ZZ', null]]) {
     await expect(page.locator('.quote-card')).toHaveCount(3);
     for (const card of await page.locator('.quote-card').all()) {
       await expect(card).toContainText(region || 'Unavailable');
+      const acceptButton = card.getByRole('button', { name: 'Accept Cover — unavailable' });
+      await expect(acceptButton).toBeDisabled();
+      await expect(acceptButton).toHaveAccessibleDescription(
+        'Cover acceptance is not available yet. You can compare quotes only.',
+      );
+      await expect(card.locator('.acceptance-notice')).toBeVisible();
+      await acceptButton.evaluate((button) => button.click());
     }
     expect(quotes.every((quote) => quote.region === region)).toBe(true);
     expect(apiRequests).toEqual([`${baseURL}/api/quotes`]);
@@ -60,6 +67,40 @@ test('shows core validation errors and restores the submit button', async ({ pag
   await page.locator('#quote-form').evaluate((form) => { form.noValidate = true; });
   await page.getByRole('button', { name: 'Generate quotes' }).click();
   await expect(page.getByRole('status')).toHaveText('Property year built must be between 1500 and 2100.');
+  await expect(page.locator('.quote-card')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Generate quotes' })).toBeEnabled();
+});
+
+test('enforces rebuild-cost storage limits in the browser', async ({ page }) => {
+  await page.goto('/');
+  await fillQuote(page);
+  const cost = page.getByLabel('Rebuild cost');
+  for (const value of ['0.01', '99999999.99']) {
+    await cost.fill(value);
+    expect(await cost.evaluate((input) => input.checkValidity())).toBe(true);
+  }
+  const apiRequests = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/api/')) apiRequests.push(request.url());
+  });
+  for (const value of ['100000000', '99999999.995', '0.001']) {
+    await cost.fill(value);
+    expect(await cost.evaluate((input) => input.checkValidity())).toBe(false);
+    await page.getByRole('button', { name: 'Generate quotes' }).click();
+  }
+  expect(apiRequests).toEqual([]);
+  await expect(page.getByRole('status')).toHaveText('');
+});
+
+test('rejects rebuild-cost overflow even when browser validation is bypassed', async ({ page }) => {
+  await page.goto('/');
+  await fillQuote(page);
+  await page.getByLabel('Rebuild cost').fill('100000000');
+  await page.locator('#quote-form').evaluate((form) => { form.noValidate = true; });
+  const pendingResponse = page.waitForResponse((response) => response.url().endsWith('/api/quotes'));
+  await page.getByRole('button', { name: 'Generate quotes' }).click();
+  expect((await pendingResponse).status()).toBe(400);
+  await expect(page.getByRole('status')).toHaveText('Property rebuild cost must be 99999999.99 or less.');
   await expect(page.locator('.quote-card')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Generate quotes' })).toBeEnabled();
 });

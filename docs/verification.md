@@ -27,6 +27,13 @@ saving completes, persistence failures propagate, and rating failures never
 reach persistence. EF Core InMemory tests cover entity mapping; they do not
 prove SQL Server constraints or transaction rollback.
 
+Rebuild-cost tests accept `0.01` and `99999999.99`, reject `100000000`
+and fractional pennies (including rounding overflow and rounding to zero), and
+verify invalid costs never reach rating or persistence. Gateway tests verify
+the same limits before forwarding. The HTTP/SQL smoke check saves the exact SQL
+maximum and confirms rejected costs create no records. Browser tests cover
+native constraints and server rejection when native validation is bypassed.
+
 From `php-gateway/`, run `composer install` and `composer test`. The entrypoint
 regression test boots a separate PHP interpreter without Composer autoloading:
 the gateway explicitly loads its HTTP interface before the cURL implementation.
@@ -101,6 +108,9 @@ London quotes, unavailable postcode enrichment, backend validation errors, and
 core API unavailability (via a second frontend on port 3001). Successful browser
 responses are checked against their own SQL records using the verifier's
 `--verify-saved-response` stdin mode. API responses are not mocked in the browser.
+The successful browser cases also verify each cover-acceptance button is disabled,
+has a visible explanation and accessible description, and triggers no additional
+API request when its DOM click method is invoked.
 Failures retain traces/screenshots in `frontend/test-results/` and an HTML report
 in `frontend/playwright-report/`. To run just browser tests against the prepared
 fixture stack, use `npm run test:e2e` in `frontend/`; `npm test` remains unit-only.

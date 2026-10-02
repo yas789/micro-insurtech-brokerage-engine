@@ -14,6 +14,7 @@ public sealed class QuotesController(
     private const int MaxClientLastNameLength = 100;
     private const int MaxClientEmailLength = 254;
     private const int MaxPropertyPostcodeLength = 16;
+    private const decimal MaxRebuildCost = 99999999.99m;
 
     [HttpPost]
     [ProducesResponseType(typeof(QuoteResponse), StatusCodes.Status200OK)]
@@ -102,6 +103,14 @@ public sealed class QuotesController(
         if (request.Property.RebuildCost <= 0)
         {
             errors.Add("Property rebuild cost must be greater than zero.");
+        }
+        else if (request.Property.RebuildCost > MaxRebuildCost)
+        {
+            errors.Add("Property rebuild cost must be 99999999.99 or less.");
+        }
+        else if (decimal.Round(request.Property.RebuildCost, 2) != request.Property.RebuildCost)
+        {
+            errors.Add("Property rebuild cost must have at most two decimal places.");
         }
 
         return errors;

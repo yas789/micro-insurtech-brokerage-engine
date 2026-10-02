@@ -98,9 +98,16 @@ export function createQuoteCard(quote, index) {
   const acceptButton = document.createElement('button');
   acceptButton.type = 'button';
   acceptButton.className = 'accept-button';
-  acceptButton.textContent = 'Accept Cover';
+  acceptButton.textContent = 'Accept Cover — unavailable';
+  acceptButton.disabled = true;
 
-  card.append(rank, title, premium, details, acceptButton);
+  const acceptanceNotice = document.createElement('p');
+  acceptanceNotice.id = `cover-unavailable-${index}`;
+  acceptanceNotice.className = 'acceptance-notice';
+  acceptanceNotice.textContent = 'Cover acceptance is not available yet. You can compare quotes only.';
+  acceptButton.setAttribute('aria-describedby', acceptanceNotice.id);
+
+  card.append(rank, title, premium, details, acceptButton, acceptanceNotice);
 
   return card;
 }

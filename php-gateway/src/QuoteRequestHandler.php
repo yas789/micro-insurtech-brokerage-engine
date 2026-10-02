@@ -6,6 +6,8 @@ namespace MicroInsurTech\Gateway;
 
 final class QuoteRequestHandler
 {
+    private const MaxRebuildCost = 99999999.99;
+
     /**
      * @param array<string, mixed> $payload
      * @return list<string>
@@ -47,6 +49,10 @@ final class QuoteRequestHandler
 
         if (!isset($propertyPayload['rebuildCost']) || !is_numeric($propertyPayload['rebuildCost']) || (float) $propertyPayload['rebuildCost'] <= 0) {
             $errors[] = 'Property rebuild cost must be greater than zero.';
+        } elseif (!is_finite((float) $propertyPayload['rebuildCost']) || (float) $propertyPayload['rebuildCost'] > self::MaxRebuildCost) {
+            $errors[] = 'Property rebuild cost must be 99999999.99 or less.';
+        } elseif (round((float) $propertyPayload['rebuildCost'], 2) !== (float) $propertyPayload['rebuildCost']) {
+            $errors[] = 'Property rebuild cost must have at most two decimal places.';
         }
 
         if (!isset($propertyPayload['isUnoccupied']) || !is_bool($propertyPayload['isUnoccupied'])) {

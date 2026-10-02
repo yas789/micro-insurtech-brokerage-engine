@@ -108,8 +108,11 @@ public sealed class QuotesControllerTests
         Assert.False(persistenceService.WasCalled);
     }
 
-    [Fact]
-    public async Task GenerateQuoteAsync_ReturnsQuoteResponseForValidRequest()
+    [Theory]
+    [InlineData("0.01")]
+    [InlineData("750000.00")]
+    [InlineData("99999999.99")]
+    public async Task GenerateQuoteAsync_ReturnsQuoteResponseForValidRequest(string rebuildCost)
     {
         var expectedResponse = new QuoteResponse(new[]
         {
@@ -119,13 +122,35 @@ public sealed class QuotesControllerTests
         var controller = new QuotesController(new StubQuoteOrchestrationService(expectedResponse), persistenceService);
         var request = new QuoteRequest(
             new ClientDto(ValidFirstName, ValidLastName, ValidEmail),
-            new PropertyEvaluationDto(ValidPostcode, ValidYearBuilt, ValidRebuildCost, false));
+            new PropertyEvaluationDto(ValidPostcode, ValidYearBuilt,
+                decimal.Parse(rebuildCost, System.Globalization.CultureInfo.InvariantCulture), false));
 
         var result = await controller.GenerateQuoteAsync(request, CancellationToken.None);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Same(expectedResponse, okResult.Value);
         Assert.True(persistenceService.WasCalled);
+    }
+
+    [Theory]
+    [InlineData("100000000", "Property rebuild cost must be 99999999.99 or less.")]
+    [InlineData("99999999.995", "Property rebuild cost must be 99999999.99 or less.")]
+    [InlineData("750000.001", "Property rebuild cost must have at most two decimal places.")]
+    [InlineData("0.001", "Property rebuild cost must have at most two decimal places.")]
+    public async Task GenerateQuoteAsync_RejectsUnstorableRebuildCostsWithoutSideEffects(string value, string expectedError)
+    {
+        var orchestration = new StubQuoteOrchestrationService();
+        var persistence = new StubQuotePersistenceService();
+        var controller = new QuotesController(orchestration, persistence);
+        var request = CreateRequest(rebuildCost: decimal.Parse(value, System.Globalization.CultureInfo.InvariantCulture));
+
+        var result = await controller.GenerateQuoteAsync(request, CancellationToken.None);
+
+        var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
+        var json = System.Text.Json.JsonSerializer.SerializeToElement(badRequest.Value);
+        Assert.Equal(expectedError, Assert.Single(json.GetProperty("errors").EnumerateArray()).GetString());
+        Assert.False(orchestration.WasCalled);
+        Assert.False(persistence.WasCalled);
     }
 
     [Fact]
