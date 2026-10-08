@@ -41,9 +41,11 @@ Each behavior/workflow change includes documentation in `docs/` or `README.md`.
 - [x] 10. Expose results loading through aria-busy.
   Verification: Vitest pending/success/failure DOM assertions.
   Result: npm test passed (39 tests), with busy-state assertions on all outcomes.
-- [~] 11. Refresh repository tooling guidance and verification entry points.
+- [x] 11. Refresh repository tooling guidance and verification entry points.
   Verification: Cross-check package/scripts; documentation checker.
-- [ ] 12. Require docs/verification.md in documentation check.
+  Result: Docs checker and Composer validation passed; npm scripts confirmed;
+  all 3 Python frontend proxy tests passed.
+- [~] 12. Require docs/verification.md in documentation check.
   Verification: Real repo pass and isolated missing-file failure.
 - [ ] 13. Cache npm downloads in frontend and integration CI jobs.
   Verification: Workflow validation and remote CI run.
