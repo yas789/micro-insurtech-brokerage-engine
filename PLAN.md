@@ -32,9 +32,10 @@ Each behavior/workflow change includes documentation in `docs/` or `README.md`.
 - [x] 7. Prevent overlapping submissions per form.
   Verification: Vitest deferred requests and subsequent submission.
   Result: npm test passed (22 tests), including independent forms.
-- [~] 8. Distinguish empty quote responses from successful comparisons.
+- [x] 8. Distinguish empty quote responses from successful comparisons.
   Verification: Vitest empty/nonempty status assertions.
-- [ ] 9. Display unavailable premiums honestly, preserving zero.
+  Result: npm test passed (23 tests).
+- [~] 9. Display unavailable premiums honestly, preserving zero.
   Verification: Vitest missing/invalid/zero/normal premium cases.
 - [ ] 10. Expose results loading through aria-busy.
   Verification: Vitest pending/success/failure DOM assertions.

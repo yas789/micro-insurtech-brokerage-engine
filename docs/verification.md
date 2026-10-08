@@ -74,6 +74,11 @@ dispatched submit events. Duplicate submissions leave the pending UI intact;
 success or failure releases the guard so another request can be made. Separate
 forms remain independent. This browser guard does not provide API idempotency.
 
+An empty quote list is a completed request with no available underwriter options,
+not a transport error. Both the status message and results panel explain that no
+underwriters returned a quote; premium-order success text is reserved for a
+nonempty comparison.
+
 ## Browser-facing HTTP and SQL smoke check
 
 Start SQL Server, initialize the database, run the core engine, and launch the

@@ -163,6 +163,18 @@ describe('quote frontend', () => {
     expect(results.textContent).toContain('AvivaScheme');
   });
 
+  it('reports an empty quote response consistently without marking it as an error', async () => {
+    const { form, button, status, results } = createDomHarness();
+    const fetchQuotes = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ quotes: [] }) });
+
+    await handleQuoteSubmit(fakeSubmitEvent(), form, button, status, results, fetchQuotes);
+
+    expect(status.textContent).toBe('No underwriters returned a quote for this risk.');
+    expect(status.textContent).toBe(results.textContent);
+    expect(status.classList.contains('error')).toBe(false);
+    expect(button.disabled).toBe(false);
+  });
+
   it('shows loading state while quote request is pending', async () => {
     const { form, button, status, results } = createDomHarness();
     const pendingResponse = createDeferredResponse();
@@ -291,7 +303,7 @@ describe('quote frontend', () => {
     await handleQuoteSubmit(fakeSubmitEvent(), form, button, status, results, successfulRequest);
 
     expect(status.classList.contains('error')).toBe(false);
-    expect(status.textContent).toBe('Quotes returned in premium order.');
+    expect(status.textContent).toBe('No underwriters returned a quote for this risk.');
   });
 
   it('formats helper output safely', () => {

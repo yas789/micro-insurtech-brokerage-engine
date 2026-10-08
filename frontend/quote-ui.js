@@ -2,6 +2,7 @@ const requestingQuotesMessage = 'Requesting quotes from underwriters...';
 const processingQuotesMessage = 'Quote request is being processed.';
 const quotesReturnedMessage = 'Quotes returned in premium order.';
 const noQuotesMessage = 'No quotes to display yet.';
+const noUnderwritersMessage = 'No underwriters returned a quote for this risk.';
 const quoteApiPath = '/api/quotes';
 const pendingQuoteForms = new WeakSet();
 const jsonHeaders = {
@@ -47,8 +48,11 @@ export async function handleQuoteSubmit(event, formElement, buttonElement, statu
       throw new Error(formatError(responseBody));
     }
 
-    renderQuotes(resultsElement, responseBody.quotes || []);
-    setStatus(statusElement, quotesReturnedMessage);
+    const quotes = responseBody.quotes || [];
+    renderQuotes(resultsElement, quotes);
+    setStatus(statusElement, Array.isArray(quotes) && quotes.length > 0
+      ? quotesReturnedMessage
+      : noUnderwritersMessage);
   } catch (error) {
     renderEmptyState(resultsElement, noQuotesMessage);
     setStatus(statusElement, error instanceof Error ? error.message : 'Quote request failed.', true);
@@ -76,7 +80,7 @@ export function buildQuotePayload(formData) {
 
 export function renderQuotes(resultsElement, quotes) {
   if (!Array.isArray(quotes) || quotes.length === 0) {
-    renderEmptyState(resultsElement, 'No underwriters returned a quote for this risk.');
+    renderEmptyState(resultsElement, noUnderwritersMessage);
     return;
   }
 
