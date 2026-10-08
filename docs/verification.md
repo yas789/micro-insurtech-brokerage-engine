@@ -45,6 +45,11 @@ or graphemes; supplementary characters such as emoji count as two. Boundary
 tests include ASCII, accented names, and emoji and verify rejected requests are
 not forwarded to the core.
 
+Gateway email validation runs on the same trimmed value forwarded to the core.
+Surrounding spaces, tabs, and line endings are accepted around an otherwise valid
+address; internal whitespace, blank addresses, and missing local/domain parts
+are rejected without forwarding.
+
 ## Browser-facing HTTP and SQL smoke check
 
 Start SQL Server, initialize the database, run the core engine, and launch the

@@ -16,9 +16,10 @@ Each behavior/workflow change includes documentation in `docs/` or `README.md`.
 - [x] 2. Validate trimmed gateway text lengths using UTF-16 storage units.
   Verification: PHPUnit ASCII/Unicode boundary and no-forwarding tests.
   Result: PHPUnit passed (52 tests, 110 assertions).
-- [~] 3. Validate trimmed gateway email addresses.
+- [x] 3. Validate trimmed gateway email addresses.
   Verification: PHPUnit whitespace and invalid-email cases.
-- [ ] 4. Strengthen direct core email validation.
+  Result: PHPUnit passed (58 tests, 126 assertions).
+- [~] 4. Strengthen direct core email validation.
   Verification: .NET controller email acceptance/rejection tests.
 - [ ] 5. Normalize upstream field-keyed validation errors at gateway.
   Verification: PHPUnit realistic ASP.NET binding-error responses.

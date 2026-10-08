@@ -87,6 +87,35 @@ final class GatewayRequestHandlerTest extends TestCase
         self::assertSame('http://core-engine.local/api/quotes', $httpClient->url);
     }
 
+    /** @dataProvider emailProvider */
+    public function testHandleValidatesNormalizedEmail(string $email, bool $valid): void
+    {
+        $client = new GatewayFakeHttpClient(new HttpResponse(200, '{"quotes":[]}'));
+        $handler = $this->createHandler($client);
+        $payload = QuotePayloadFactory::validPayload();
+        $payload['client']['email'] = $email;
+
+        $response = $handler->handle('POST', '/api/quotes', json_encode($payload, JSON_THROW_ON_ERROR));
+
+        self::assertSame($valid ? 200 : 400, $response['statusCode']);
+        if ($valid) {
+            self::assertSame(trim($email), json_decode($client->json, true)['client']['email']);
+        } else {
+            self::assertSame(['errors' => ['A valid client email is required.']], $response['body']);
+            self::assertSame('', $client->url);
+        }
+    }
+
+    public static function emailProvider(): iterable
+    {
+        yield 'surrounding spaces' => [' jane@example.com ', true];
+        yield 'surrounding line whitespace' => ["\t jane+quotes@example.com\r\n", true];
+        yield 'blank' => ['   ', false];
+        yield 'missing local part' => [' @example.com ', false];
+        yield 'internal space' => [' jane broker@example.com ', false];
+        yield 'missing domain' => [' jane@ ', false];
+    }
+
     /** @dataProvider textLengthProvider */
     public function testHandleChecksTextLengthsBeforeForwarding(string $section, string $field, string $value, ?string $error): void
     {
@@ -189,6 +218,7 @@ final class GatewayRequestHandlerTest extends TestCase
 final class GatewayFakeHttpClient implements HttpClient
 {
     public string $url = '';
+    public string $json = '';
 
     public function __construct(private readonly HttpResponse $response)
     {
@@ -197,6 +227,7 @@ final class GatewayFakeHttpClient implements HttpClient
     public function postJson(string $url, string $json, array $headers, int $timeoutSeconds): HttpResponse
     {
         $this->url = $url;
+        $this->json = $json;
 
         return $this->response;
     }

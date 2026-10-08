@@ -37,7 +37,7 @@ final class QuoteRequestHandler
                 $errors[] = 'A valid client email is required.';
             } elseif ($this->exceedsTextLength($clientPayload['email'], 254)) {
                 $errors[] = 'Client email must be 254 characters or fewer.';
-            } elseif (filter_var($clientPayload['email'], FILTER_VALIDATE_EMAIL) === false) {
+            } elseif (filter_var(trim($clientPayload['email']), FILTER_VALIDATE_EMAIL) === false) {
                 $errors[] = 'A valid client email is required.';
             }
         }
