@@ -23,13 +23,21 @@ final class QuoteRequestHandler
         } else {
             if (!$this->hasText($clientPayload['firstName'] ?? null)) {
                 $errors[] = 'Client first name is required.';
+            } elseif ($this->exceedsTextLength($clientPayload['firstName'], 100)) {
+                $errors[] = 'Client first name must be 100 characters or fewer.';
             }
 
             if (!$this->hasText($clientPayload['lastName'] ?? null)) {
                 $errors[] = 'Client last name is required.';
+            } elseif ($this->exceedsTextLength($clientPayload['lastName'], 100)) {
+                $errors[] = 'Client last name must be 100 characters or fewer.';
             }
 
-            if (!$this->hasText($clientPayload['email'] ?? null) || filter_var($clientPayload['email'], FILTER_VALIDATE_EMAIL) === false) {
+            if (!$this->hasText($clientPayload['email'] ?? null)) {
+                $errors[] = 'A valid client email is required.';
+            } elseif ($this->exceedsTextLength($clientPayload['email'], 254)) {
+                $errors[] = 'Client email must be 254 characters or fewer.';
+            } elseif (filter_var(trim($clientPayload['email']), FILTER_VALIDATE_EMAIL) === false) {
                 $errors[] = 'A valid client email is required.';
             }
         }
@@ -41,10 +49,14 @@ final class QuoteRequestHandler
 
         if (!$this->hasText($propertyPayload['postcode'] ?? null)) {
             $errors[] = 'Property postcode is required.';
+        } elseif ($this->exceedsTextLength($propertyPayload['postcode'], 16)) {
+            $errors[] = 'Property postcode must be 16 characters or fewer.';
         }
 
         if (!isset($propertyPayload['yearBuilt']) || filter_var($propertyPayload['yearBuilt'], FILTER_VALIDATE_INT) === false) {
             $errors[] = 'Property year built must be an integer.';
+        } elseif ((int) $propertyPayload['yearBuilt'] < 1500 || (int) $propertyPayload['yearBuilt'] > 2100) {
+            $errors[] = 'Property year built must be between 1500 and 2100.';
         }
 
         if (!isset($propertyPayload['rebuildCost']) || !is_numeric($propertyPayload['rebuildCost']) || (float) $propertyPayload['rebuildCost'] <= 0) {
@@ -86,6 +98,18 @@ final class QuoteRequestHandler
                 'isUnoccupied' => (bool) $propertyPayload['isUnoccupied'],
             ],
         ];
+    }
+
+    private function exceedsTextLength(string $value, int $maxLength): bool
+    {
+        $text = trim($value);
+        // Match C# String.Length and SQL Server nvarchar: supplementary characters
+        // occupy two UTF-16 units, while other Unicode characters occupy one.
+        $characters = preg_match_all('/./us', $text);
+        $supplementaryCharacters = preg_match_all('/[\x{10000}-\x{10FFFF}]/u', $text);
+
+        return $characters === false || $supplementaryCharacters === false
+            || $characters + $supplementaryCharacters > $maxLength;
     }
 
     private function hasText(mixed $value): bool

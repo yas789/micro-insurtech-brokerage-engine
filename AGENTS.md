@@ -25,18 +25,21 @@
 - `core-engine/Services/QuoteOrchestrationService.cs` coordinates postcode enrichment and concurrent underwriter calls.
 - `core-engine/Controllers/QuotesController.cs` exposes `POST /api/quotes`.
 - `php-gateway/` is a PHP 8.1+ gateway scaffold using PSR-4 namespace `MicroInsurTech\Gateway\` mapped to `src/`.
-- `frontend/` is a plain HTML/CSS/JavaScript scaffold; no package manager is configured yet.
+- `frontend/` is native HTML/CSS/JavaScript, with npm-managed Vitest DOM tests and Playwright browser tests. `app.js` binds the form; `quote-ui.js` owns quote UI behavior.
 - `database/schema.sql` contains the SQL Server schema for `Clients`, `Properties`, and `Quotes`.
-- `core-engine-tests/` contains xUnit tests for underwriter scheme calculations.
+- `core-engine-tests/` contains xUnit tests for schemes, postcode lookup, orchestration, controllers, and EF Core persistence mapping.
 
 ## Verified Commands
 
 - Build the .NET scaffold from repo root: `dotnet build core-engine/MicroInsurTech.CoreEngine.csproj`.
 - Build the test project from repo root: `dotnet build core-engine-tests/MicroInsurTech.CoreEngine.Tests.csproj`.
 - Run tests when .NET 8 runtime is installed: `dotnet test core-engine-tests/MicroInsurTech.CoreEngine.Tests.csproj`.
-- Current local environment has .NET 9 SDK/runtime only; `dotnet test` may fail locally for net8.0 even when CI passes with `actions/setup-dotnet@v4`.
+- If only .NET 9 is installed, `DOTNET_ROLL_FORWARD=Major dotnet test core-engine-tests/MicroInsurTech.CoreEngine.Tests.csproj` provides a local fallback. Report the runtime used; CI still verifies native .NET 8 with `actions/setup-dotnet@v4`.
 - PHP is not guaranteed on local PATH in the current environment; do not claim PHP checks passed unless you run them.
-- No frontend package scripts exist yet.
+- From `php-gateway/`: `composer install`, `composer validate --strict --no-check-lock`, and `composer test`.
+- From `frontend/`: `npm ci` and `npm test` for Vitest; `npx playwright install chromium` and `npm run test:e2e` for browser tests against a prepared fixture stack.
+- From repo root: `python3 -m unittest discover -s scripts/tests` for local frontend proxy tests, and `sh scripts/check-docs.sh` for documentation presence.
+- Full HTTP/SQL/browser integration: `python3 scripts/run-integration.py` (requires Docker with amd64 Linux support, .NET 8, PHP/cURL, Node, and browser dependencies). See `docs/verification.md`.
 
 ## Configuration Notes
 

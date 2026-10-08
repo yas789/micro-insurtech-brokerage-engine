@@ -8,6 +8,11 @@ The repository is scaffolded. CI should validate the files that exist today and 
 
 The PR workflow runs for pull requests into `dev` and `main`.
 
+PR runs share a concurrency group per workflow and PR number. A new run cancels
+an older in-progress run for the same PR, avoiding redundant integration work.
+Other PRs use separate groups. Manual dispatches use their run ID and do not
+cancel in-progress runs; the event name separates manual and PR groups.
+
 Expected workflow:
 
 - Feature branches target `dev`.
@@ -20,14 +25,26 @@ Current checks:
 - Restore and build the .NET core engine.
 - Run .NET core engine unit tests.
 - Validate required documentation files exist.
+- The documentation check requires `docs/verification.md` as well as the setup,
+  architecture, persistence, and workflow guides. Missing or empty required files
+  fail the check; it checks presence, not prose accuracy.
 - Validate PHP file syntax when PHP is available in CI.
 - Validate PHP Composer metadata.
 - Composer validation runs in strict mode, so `php-gateway/composer.json` must include required metadata such as `license`.
 - Install PHP gateway development dependencies and run PHPUnit gateway tests.
 - Install frontend dependencies with `npm ci` and run Vitest quote flow tests.
+- Both frontend and integration jobs cache npm downloads through
+  `actions/setup-node`, keyed by `frontend/package-lock.json`. `npm ci` still
+  installs dependencies on every run; `node_modules` is not cached.
 - Install Playwright Chromium and run the full deterministic quote journey
   integration runner: browser -> frontend proxy -> PHP gateway -> .NET core ->
   SQL Server, with a local postcode fixture and SQL record assertions.
+- Failed integration jobs upload Playwright HTML reports, retained traces and
+  screenshots, and application logs under a `quote-journey-diagnostics-*`
+  artifact, retained for seven days. Missing paths are ignored if failure occurs
+  before diagnostics are produced. Download the artifact from the Actions run;
+  open `index.html` in the report or use `npx playwright show-trace <trace.zip>`
+  from `frontend/` to inspect a trace. Successful runs do not upload diagnostics.
 
 Future checks:
 

@@ -153,6 +153,39 @@ public sealed class QuotesControllerTests
         Assert.False(persistence.WasCalled);
     }
 
+    [Theory]
+    [InlineData("jane@example.com", true)]
+    [InlineData(" jane+quotes@example.co.uk ", true)]
+    [InlineData("@", false)]
+    [InlineData("@example.com", false)]
+    [InlineData("jane@", false)]
+    [InlineData("jane@@example.com", false)]
+    [InlineData("jane broker@example.com", false)]
+    [InlineData("Jane <jane@example.com>", false)]
+    [InlineData("jane@localhost", false)]
+    [InlineData("jane@example.com\r\nBcc:other@example.com", false)]
+    public async Task GenerateQuoteAsync_ValidatesPlainEmailBeforeSideEffects(string email, bool valid)
+    {
+        var orchestration = new StubQuoteOrchestrationService();
+        var persistence = new StubQuotePersistenceService();
+        var controller = new QuotesController(orchestration, persistence);
+
+        var result = await controller.GenerateQuoteAsync(CreateRequest(email: email), CancellationToken.None);
+
+        if (valid)
+        {
+            Assert.IsType<OkObjectResult>(result.Result);
+        }
+        else
+        {
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
+            var json = System.Text.Json.JsonSerializer.SerializeToElement(badRequest.Value);
+            Assert.Equal("A valid client email is required.", Assert.Single(json.GetProperty("errors").EnumerateArray()).GetString());
+        }
+        Assert.Equal(valid, orchestration.WasCalled);
+        Assert.Equal(valid, persistence.WasCalled);
+    }
+
     [Fact]
     public async Task GenerateQuoteAsync_WaitsForPersistenceBeforeReturningSuccess()
     {

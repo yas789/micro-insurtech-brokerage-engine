@@ -53,6 +53,40 @@ final class BrokerServiceTest extends TestCase
         self::assertSame(['errors' => ['Invalid risk']], $result['body']);
     }
 
+    public function testRequestQuotesFlattensAspNetBindingErrors(): void
+    {
+        $body = [
+            'type' => 'https://tools.ietf.org/html/rfc9110#section-15.5.1',
+            'title' => 'One or more validation errors occurred.',
+            'status' => 400,
+            'errors' => [
+                '$.property.yearBuilt' => ['The JSON value could not be converted to System.Int32.'],
+                'request' => ['The request field is required.', 'Supply a quote request.'],
+            ],
+            'traceId' => 'internal-trace',
+        ];
+        $client = new FakeHttpClient(new HttpResponse(400, json_encode($body, JSON_THROW_ON_ERROR)));
+        $service = new BrokerService('http://core-engine.local', 15, $client);
+
+        $result = $service->requestQuotes(QuotePayloadFactory::validPayload());
+
+        self::assertSame(400, $result['statusCode']);
+        self::assertSame(['errors' => [
+            'The JSON value could not be converted to System.Int32.',
+            'The request field is required.',
+            'Supply a quote request.',
+        ]], $result['body']);
+    }
+
+    public function testRequestQuotesUsesFallbackForUnusableFieldErrors(): void
+    {
+        $client = new FakeHttpClient(new HttpResponse(400, '{"errors":{"request":[null,42,""]}}'));
+        $service = new BrokerService('http://core-engine.local', 15, $client);
+
+        self::assertSame(['errors' => ['Quote request is invalid.']],
+            $service->requestQuotes(QuotePayloadFactory::validPayload())['body']);
+    }
+
     public function testRequestQuotesConvertsUpstreamServerErrorToSafeGatewayError(): void
     {
         $httpClient = new FakeHttpClient(new HttpResponse(500, self::LeakyServerErrorJson));

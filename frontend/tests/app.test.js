@@ -161,6 +161,19 @@ describe('quote frontend', () => {
     expect(button.textContent).toBe('Generate quotes');
     expect(status.textContent).toBe('Quotes returned in premium order.');
     expect(results.textContent).toContain('AvivaScheme');
+    expect(results.getAttribute('aria-busy')).toBe('false');
+  });
+
+  it('reports an empty quote response consistently without marking it as an error', async () => {
+    const { form, button, status, results } = createDomHarness();
+    const fetchQuotes = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ quotes: [] }) });
+
+    await handleQuoteSubmit(fakeSubmitEvent(), form, button, status, results, fetchQuotes);
+
+    expect(status.textContent).toBe('No underwriters returned a quote for this risk.');
+    expect(status.textContent).toBe(results.textContent);
+    expect(status.classList.contains('error')).toBe(false);
+    expect(button.disabled).toBe(false);
   });
 
   it('shows loading state while quote request is pending', async () => {
@@ -174,12 +187,53 @@ describe('quote frontend', () => {
     expect(button.textContent).toBe('Generating...');
     expect(status.textContent).toBe('Requesting quotes from underwriters...');
     expect(results.textContent).toBe('Quote request is being processed.');
+    expect(results.getAttribute('aria-busy')).toBe('true');
 
     pendingResponse.resolve({
       ok: true,
       json: async () => ({ quotes: [] }),
     });
     await submitPromise;
+    expect(results.getAttribute('aria-busy')).toBe('false');
+  });
+
+  it.each([true, false])('ignores overlapping submissions and permits retry after ok=%s', async (ok) => {
+    const { form, button, status, results } = createDomHarness();
+    const pending = createDeferredResponse();
+    const fetchQuotes = vi.fn().mockReturnValueOnce(pending.promise).mockResolvedValue({
+      ok: true,
+      json: async () => ({ quotes: [] }),
+    });
+
+    const first = handleQuoteSubmit(fakeSubmitEvent(), form, button, status, results, fetchQuotes);
+    const duplicateEvent = fakeSubmitEvent();
+    await handleQuoteSubmit(duplicateEvent, form, button, status, results, fetchQuotes);
+
+    expect(duplicateEvent.preventDefault).toHaveBeenCalledOnce();
+    expect(fetchQuotes).toHaveBeenCalledOnce();
+    expect(button.disabled).toBe(true);
+    expect(results.getAttribute('aria-busy')).toBe('true');
+    expect(results.textContent).toBe('Quote request is being processed.');
+    pending.resolve({ ok, json: async () => ok ? { quotes: [] } : { error: 'Gateway failed.' } });
+    await first;
+    expect(button.disabled).toBe(false);
+
+    await handleQuoteSubmit(fakeSubmitEvent(), form, button, status, results, fetchQuotes);
+    expect(fetchQuotes).toHaveBeenCalledTimes(2);
+  });
+
+  it('allows separate forms to submit independently', async () => {
+    const first = createDomHarness();
+    const second = createDomHarness();
+    const pending = createDeferredResponse();
+    const fetchQuotes = vi.fn().mockReturnValue(pending.promise);
+
+    const firstSubmit = handleQuoteSubmit(fakeSubmitEvent(), first.form, first.button, first.status, first.results, fetchQuotes);
+    const secondSubmit = handleQuoteSubmit(fakeSubmitEvent(), second.form, second.button, second.status, second.results, fetchQuotes);
+
+    expect(fetchQuotes).toHaveBeenCalledTimes(2);
+    pending.resolve({ ok: true, json: async () => ({ quotes: [] }) });
+    await Promise.all([firstSubmit, secondSubmit]);
   });
 
   it('binds the form submit event to quote submission', async () => {
@@ -208,6 +262,7 @@ describe('quote frontend', () => {
     expect(status.classList.contains('error')).toBe(true);
     expect(status.textContent).toBe('A valid client email is required.');
     expect(results.textContent).toBe('No quotes to display yet.');
+    expect(results.getAttribute('aria-busy')).toBe('false');
   });
 
   it('displays network failures', async () => {
@@ -219,22 +274,28 @@ describe('quote frontend', () => {
     expect(status.classList.contains('error')).toBe(true);
     expect(status.textContent).toBe('Network unavailable');
     expect(results.textContent).toBe('No quotes to display yet.');
+    expect(results.getAttribute('aria-busy')).toBe('false');
   });
 
-  it('displays invalid JSON response failures', async () => {
+  it.each([
+    ['HTML error', false, '<html>Bad gateway</html>', 'Quote request failed. Please try again.'],
+    ['empty error', false, '', 'Quote request failed. Please try again.'],
+    ['malformed success', true, '{broken', 'Gateway returned an invalid response. Please try again.'],
+    ['empty success', true, '', 'Gateway returned an invalid response. Please try again.'],
+  ])('displays a readable message for %s responses', async (_label, ok, body, message) => {
     const { form, button, status, results } = createDomHarness();
     const fetchQuotes = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => {
-        throw new Error('Invalid JSON');
-      },
+      ok,
+      json: async () => JSON.parse(body),
     });
 
     await handleQuoteSubmit(fakeSubmitEvent(), form, button, status, results, fetchQuotes);
 
     expect(status.classList.contains('error')).toBe(true);
-    expect(status.textContent).toBe('Invalid JSON');
+    expect(status.textContent).toBe(message);
     expect(results.textContent).toBe('No quotes to display yet.');
+    expect(button.disabled).toBe(false);
+    expect(results.getAttribute('aria-busy')).toBe('false');
   });
 
   it('clears previous error state after a later successful request', async () => {
@@ -249,7 +310,27 @@ describe('quote frontend', () => {
     await handleQuoteSubmit(fakeSubmitEvent(), form, button, status, results, successfulRequest);
 
     expect(status.classList.contains('error')).toBe(false);
-    expect(status.textContent).toBe('Quotes returned in premium order.');
+    expect(status.textContent).toBe('No underwriters returned a quote for this risk.');
+  });
+
+  it.each([undefined, null, '', '   ', 'not-a-number', NaN, Infinity, -1, false, [], {}])(
+    'does not invent a zero premium for invalid value %j', (value) => {
+      expect(formatCurrency(value)).toBe('Unavailable');
+    },
+  );
+
+  it.each([[0, '£0.00'], ['0', '£0.00'], [120, '£120.00'], ['120.50', '£120.50']])(
+    'formats valid premium %s as %s', (value, expected) => {
+      expect(formatCurrency(value)).toBe(expected);
+    },
+  );
+
+  it('distinguishes a missing premium from an actual zero on quote cards', () => {
+    const results = document.createElement('div');
+    renderQuotes(results, [{ underwriterName: 'Missing' }, { underwriterName: 'Zero', premiumAmount: 0 }]);
+
+    expect([...results.querySelectorAll('.premium')].map((element) => element.textContent))
+      .toEqual(['Unavailable', '£0.00']);
   });
 
   it('formats helper output safely', () => {

@@ -12,6 +12,7 @@ docs/branching-strategy.md
 docs/ci-cd.md
 docs/core-orchestration-natural-language.md
 docs/database-persistence.md
+docs/verification.md
 "
 
 for file in $required_files; do

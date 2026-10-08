@@ -48,6 +48,23 @@ final class BrokerService
             return $this->gatewayError('Core engine failed to generate quotes.', 502);
         }
 
+        if ($coreResponse->statusCode === 400
+            && is_array($decodedResponse['errors'] ?? null)
+            && !array_is_list($decodedResponse['errors'])) {
+            $errors = [];
+            foreach ($decodedResponse['errors'] as $fieldErrors) {
+                if (!is_array($fieldErrors)) {
+                    continue;
+                }
+                foreach ($fieldErrors as $message) {
+                    if (is_string($message) && trim($message) !== '') {
+                        $errors[] = $message;
+                    }
+                }
+            }
+            $decodedResponse = ['errors' => $errors !== [] ? $errors : ['Quote request is invalid.']];
+        }
+
         return [
             'statusCode' => $coreResponse->statusCode > 0 ? $coreResponse->statusCode : 502,
             'body' => $decodedResponse,

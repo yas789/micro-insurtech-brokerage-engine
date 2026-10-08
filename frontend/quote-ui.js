@@ -2,7 +2,9 @@ const requestingQuotesMessage = 'Requesting quotes from underwriters...';
 const processingQuotesMessage = 'Quote request is being processed.';
 const quotesReturnedMessage = 'Quotes returned in premium order.';
 const noQuotesMessage = 'No quotes to display yet.';
+const noUnderwritersMessage = 'No underwriters returned a quote for this risk.';
 const quoteApiPath = '/api/quotes';
+const pendingQuoteForms = new WeakSet();
 const jsonHeaders = {
   'Content-Type': 'application/json',
   Accept: 'application/json',
@@ -17,8 +19,14 @@ export function bindQuoteForm(formElement, buttonElement, statusElement, results
 export async function handleQuoteSubmit(event, formElement, buttonElement, statusElement, resultsElement, quoteRequest = fetch) {
   event.preventDefault();
 
+  if (pendingQuoteForms.has(formElement)) {
+    return;
+  }
+
   const requestPayload = buildQuotePayload(new FormData(formElement));
+  pendingQuoteForms.add(formElement);
   setLoading(buttonElement, true);
+  resultsElement.setAttribute('aria-busy', 'true');
   setStatus(statusElement, requestingQuotesMessage);
   renderEmptyState(resultsElement, processingQuotesMessage);
 
@@ -28,19 +36,31 @@ export async function handleQuoteSubmit(event, formElement, buttonElement, statu
       headers: jsonHeaders,
       body: JSON.stringify(requestPayload),
     });
-    const responseBody = await response.json();
+    let responseBody;
+    try {
+      responseBody = await response.json();
+    } catch {
+      throw new Error(response.ok
+        ? 'Gateway returned an invalid response. Please try again.'
+        : 'Quote request failed. Please try again.');
+    }
 
     if (!response.ok) {
       throw new Error(formatError(responseBody));
     }
 
-    renderQuotes(resultsElement, responseBody.quotes || []);
-    setStatus(statusElement, quotesReturnedMessage);
+    const quotes = responseBody.quotes || [];
+    renderQuotes(resultsElement, quotes);
+    setStatus(statusElement, Array.isArray(quotes) && quotes.length > 0
+      ? quotesReturnedMessage
+      : noUnderwritersMessage);
   } catch (error) {
     renderEmptyState(resultsElement, noQuotesMessage);
     setStatus(statusElement, error instanceof Error ? error.message : 'Quote request failed.', true);
   } finally {
+    pendingQuoteForms.delete(formElement);
     setLoading(buttonElement, false);
+    resultsElement.setAttribute('aria-busy', 'false');
   }
 }
 
@@ -62,7 +82,7 @@ export function buildQuotePayload(formData) {
 
 export function renderQuotes(resultsElement, quotes) {
   if (!Array.isArray(quotes) || quotes.length === 0) {
-    renderEmptyState(resultsElement, 'No underwriters returned a quote for this risk.');
+    renderEmptyState(resultsElement, noUnderwritersMessage);
     return;
   }
 
@@ -140,10 +160,20 @@ export function setStatus(statusElement, message, isError = false) {
 }
 
 export function formatCurrency(value) {
+  if ((typeof value !== 'number' && typeof value !== 'string')
+    || (typeof value === 'string' && value.trim() === '')) {
+    return 'Unavailable';
+  }
+
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || amount < 0) {
+    return 'Unavailable';
+  }
+
   return new Intl.NumberFormat('en-GB', {
     style: 'currency',
     currency: 'GBP',
-  }).format(Number(value || 0));
+  }).format(amount);
 }
 
 export function formatError(body) {

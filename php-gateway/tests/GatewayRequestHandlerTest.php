@@ -87,6 +87,94 @@ final class GatewayRequestHandlerTest extends TestCase
         self::assertSame('http://core-engine.local/api/quotes', $httpClient->url);
     }
 
+    /** @dataProvider emailProvider */
+    public function testHandleValidatesNormalizedEmail(string $email, bool $valid): void
+    {
+        $client = new GatewayFakeHttpClient(new HttpResponse(200, '{"quotes":[]}'));
+        $handler = $this->createHandler($client);
+        $payload = QuotePayloadFactory::validPayload();
+        $payload['client']['email'] = $email;
+
+        $response = $handler->handle('POST', '/api/quotes', json_encode($payload, JSON_THROW_ON_ERROR));
+
+        self::assertSame($valid ? 200 : 400, $response['statusCode']);
+        if ($valid) {
+            self::assertSame(trim($email), json_decode($client->json, true)['client']['email']);
+        } else {
+            self::assertSame(['errors' => ['A valid client email is required.']], $response['body']);
+            self::assertSame('', $client->url);
+        }
+    }
+
+    public static function emailProvider(): iterable
+    {
+        yield 'surrounding spaces' => [' jane@example.com ', true];
+        yield 'surrounding line whitespace' => ["\t jane+quotes@example.com\r\n", true];
+        yield 'blank' => ['   ', false];
+        yield 'missing local part' => [' @example.com ', false];
+        yield 'internal space' => [' jane broker@example.com ', false];
+        yield 'missing domain' => [' jane@ ', false];
+    }
+
+    /** @dataProvider textLengthProvider */
+    public function testHandleChecksTextLengthsBeforeForwarding(string $section, string $field, string $value, ?string $error): void
+    {
+        $client = new GatewayFakeHttpClient(new HttpResponse(200, '{"quotes":[]}'));
+        $handler = $this->createHandler($client);
+        $payload = QuotePayloadFactory::validPayload();
+        $payload[$section][$field] = $value;
+
+        $response = $handler->handle('POST', '/api/quotes', json_encode($payload, JSON_THROW_ON_ERROR));
+
+        self::assertSame($error === null ? 200 : 400, $response['statusCode']);
+        self::assertSame($error === null ? 'http://core-engine.local/api/quotes' : '', $client->url);
+        if ($error !== null) {
+            self::assertSame(['errors' => [$error]], $response['body']);
+        }
+    }
+
+    public static function textLengthProvider(): iterable
+    {
+        foreach (['firstName' => 'first name', 'lastName' => 'last name'] as $field => $label) {
+            yield "$field boundary" => ['client', $field, ' ' . str_repeat('A', 100) . ' ', null];
+            yield "$field overflow" => ['client', $field, str_repeat('A', 101), "Client $label must be 100 characters or fewer."];
+        }
+        yield 'accented boundary' => ['client', 'firstName', str_repeat('é', 100), null];
+        yield 'accented overflow' => ['client', 'firstName', str_repeat('é', 101), 'Client first name must be 100 characters or fewer.'];
+        yield 'supplementary boundary' => ['client', 'lastName', str_repeat('😀', 50), null];
+        yield 'supplementary overflow' => ['client', 'lastName', str_repeat('😀', 50) . 'A', 'Client last name must be 100 characters or fewer.'];
+        $email = str_repeat('a', 64) . '@' . str_repeat('b', 63) . '.' . str_repeat('c', 63) . '.' . str_repeat('d', 61);
+        yield 'email boundary' => ['client', 'email', $email, null];
+        yield 'email overflow' => ['client', 'email', $email . 'd', 'Client email must be 254 characters or fewer.'];
+        yield 'postcode boundary' => ['property', 'postcode', ' ' . str_repeat('A', 16) . ' ', null];
+        yield 'postcode overflow' => ['property', 'postcode', str_repeat('A', 17), 'Property postcode must be 16 characters or fewer.'];
+    }
+
+    /** @dataProvider yearBuiltProvider */
+    public function testHandleChecksYearBuiltBeforeForwarding(int $year, bool $valid): void
+    {
+        $client = new GatewayFakeHttpClient(new HttpResponse(200, '{"quotes":[]}'));
+        $handler = $this->createHandler($client);
+        $payload = QuotePayloadFactory::validPayload();
+        $payload['property']['yearBuilt'] = $year;
+
+        $response = $handler->handle('POST', '/api/quotes', json_encode($payload, JSON_THROW_ON_ERROR));
+
+        self::assertSame($valid ? 200 : 400, $response['statusCode']);
+        self::assertSame($valid ? 'http://core-engine.local/api/quotes' : '', $client->url);
+        if (!$valid) {
+            self::assertSame(['errors' => ['Property year built must be between 1500 and 2100.']], $response['body']);
+        }
+    }
+
+    public static function yearBuiltProvider(): iterable
+    {
+        yield 'lower boundary' => [1500, true];
+        yield 'upper boundary' => [2100, true];
+        yield 'too old' => [1499, false];
+        yield 'too new' => [2101, false];
+    }
+
     /** @dataProvider rebuildCostProvider */
     public function testHandleChecksRebuildCostBeforeForwarding(float|string $cost, ?string $error): void
     {
@@ -130,6 +218,7 @@ final class GatewayRequestHandlerTest extends TestCase
 final class GatewayFakeHttpClient implements HttpClient
 {
     public string $url = '';
+    public string $json = '';
 
     public function __construct(private readonly HttpResponse $response)
     {
@@ -138,6 +227,7 @@ final class GatewayFakeHttpClient implements HttpClient
     public function postJson(string $url, string $json, array $headers, int $timeoutSeconds): HttpResponse
     {
         $this->url = $url;
+        $this->json = $json;
 
         return $this->response;
     }
