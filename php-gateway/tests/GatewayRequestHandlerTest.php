@@ -87,6 +87,31 @@ final class GatewayRequestHandlerTest extends TestCase
         self::assertSame('http://core-engine.local/api/quotes', $httpClient->url);
     }
 
+    /** @dataProvider yearBuiltProvider */
+    public function testHandleChecksYearBuiltBeforeForwarding(int $year, bool $valid): void
+    {
+        $client = new GatewayFakeHttpClient(new HttpResponse(200, '{"quotes":[]}'));
+        $handler = $this->createHandler($client);
+        $payload = QuotePayloadFactory::validPayload();
+        $payload['property']['yearBuilt'] = $year;
+
+        $response = $handler->handle('POST', '/api/quotes', json_encode($payload, JSON_THROW_ON_ERROR));
+
+        self::assertSame($valid ? 200 : 400, $response['statusCode']);
+        self::assertSame($valid ? 'http://core-engine.local/api/quotes' : '', $client->url);
+        if (!$valid) {
+            self::assertSame(['errors' => ['Property year built must be between 1500 and 2100.']], $response['body']);
+        }
+    }
+
+    public static function yearBuiltProvider(): iterable
+    {
+        yield 'lower boundary' => [1500, true];
+        yield 'upper boundary' => [2100, true];
+        yield 'too old' => [1499, false];
+        yield 'too new' => [2101, false];
+    }
+
     /** @dataProvider rebuildCostProvider */
     public function testHandleChecksRebuildCostBeforeForwarding(float|string $cost, ?string $error): void
     {

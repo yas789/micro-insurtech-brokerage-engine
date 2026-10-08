@@ -45,6 +45,8 @@ final class QuoteRequestHandler
 
         if (!isset($propertyPayload['yearBuilt']) || filter_var($propertyPayload['yearBuilt'], FILTER_VALIDATE_INT) === false) {
             $errors[] = 'Property year built must be an integer.';
+        } elseif ((int) $propertyPayload['yearBuilt'] < 1500 || (int) $propertyPayload['yearBuilt'] > 2100) {
+            $errors[] = 'Property year built must be between 1500 and 2100.';
         }
 
         if (!isset($propertyPayload['rebuildCost']) || !is_numeric($propertyPayload['rebuildCost']) || (float) $propertyPayload['rebuildCost'] <= 0) {
