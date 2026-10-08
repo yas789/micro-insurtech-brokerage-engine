@@ -8,6 +8,11 @@ The repository is scaffolded. CI should validate the files that exist today and 
 
 The PR workflow runs for pull requests into `dev` and `main`.
 
+PR runs share a concurrency group per workflow and PR number. A new run cancels
+an older in-progress run for the same PR, avoiding redundant integration work.
+Other PRs use separate groups. Manual dispatches use their run ID and do not
+cancel in-progress runs; the event name separates manual and PR groups.
+
 Expected workflow:
 
 - Feature branches target `dev`.

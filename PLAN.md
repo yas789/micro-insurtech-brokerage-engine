@@ -56,8 +56,10 @@ Each behavior/workflow change includes documentation in `docs/` or `README.md`.
   Verification: Workflow validation and failure-artifact exercise.
   Result: actionlint and docs check passed; paths match Playwright and integration
   runner outputs. Actual failure-only upload remains unexercised unless CI fails.
-- [~] 15. Cancel superseded PR CI runs without cancelling manual runs.
+- [x] 15. Cancel superseded PR CI runs without cancelling manual runs.
   Verification: Workflow validation and two-update PR exercise.
+  Result: actionlint passed; PR number, event name, and manual run-ID grouping
+  reviewed. Live cancellation verification is pending PR CI.
 
 ## Environment and final verification
 
@@ -70,3 +72,16 @@ Each behavior/workflow change includes documentation in `docs/` or `README.md`.
 - Full SQL/browser integration requires Docker/amd64 Linux; run in GitHub CI
   if Docker is unavailable locally.
 - Review all fifteen commits and complete PR checks before delivery.
+
+### Local verification summary
+
+- PHP 8.2.32: 60 PHPUnit tests, 129 assertions passed; strict Composer validation
+  passed. Generated dependencies remain ignored.
+- Frontend: 39 Vitest tests passed, including all new loading/error-state checks.
+- Core: Release build and all 67 xUnit tests passed with .NET 9.0.10 roll-forward.
+- Python frontend proxy: 3 tests passed.
+- Documentation: repo passes; isolated missing-guide fixture fails as expected.
+- Workflows: actionlint 1.7.12 passed after each CI change.
+- Native .NET 8, SQL Server, and Chromium integration will be verified in PR CI.
+  Remote cache behavior, failure-only artifacts, and cancellation outcomes will
+  be reported in the PR verification notes rather than claimed from static checks.
