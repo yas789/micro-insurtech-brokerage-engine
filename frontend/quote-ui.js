@@ -158,10 +158,20 @@ export function setStatus(statusElement, message, isError = false) {
 }
 
 export function formatCurrency(value) {
+  if ((typeof value !== 'number' && typeof value !== 'string')
+    || (typeof value === 'string' && value.trim() === '')) {
+    return 'Unavailable';
+  }
+
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || amount < 0) {
+    return 'Unavailable';
+  }
+
   return new Intl.NumberFormat('en-GB', {
     style: 'currency',
     currency: 'GBP',
-  }).format(Number(value || 0));
+  }).format(amount);
 }
 
 export function formatError(body) {

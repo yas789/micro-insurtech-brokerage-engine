@@ -306,6 +306,26 @@ describe('quote frontend', () => {
     expect(status.textContent).toBe('No underwriters returned a quote for this risk.');
   });
 
+  it.each([undefined, null, '', '   ', 'not-a-number', NaN, Infinity, -1, false, [], {}])(
+    'does not invent a zero premium for invalid value %j', (value) => {
+      expect(formatCurrency(value)).toBe('Unavailable');
+    },
+  );
+
+  it.each([[0, '£0.00'], ['0', '£0.00'], [120, '£120.00'], ['120.50', '£120.50']])(
+    'formats valid premium %s as %s', (value, expected) => {
+      expect(formatCurrency(value)).toBe(expected);
+    },
+  );
+
+  it('distinguishes a missing premium from an actual zero on quote cards', () => {
+    const results = document.createElement('div');
+    renderQuotes(results, [{ underwriterName: 'Missing' }, { underwriterName: 'Zero', premiumAmount: 0 }]);
+
+    expect([...results.querySelectorAll('.premium')].map((element) => element.textContent))
+      .toEqual(['Unavailable', '£0.00']);
+  });
+
   it('formats helper output safely', () => {
     expect(formatCurrency(120)).toBe('£120.00');
     expect(formatError({ error: 'Gateway failed.' })).toBe('Gateway failed.');

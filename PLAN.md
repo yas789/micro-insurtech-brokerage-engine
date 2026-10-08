@@ -35,9 +35,10 @@ Each behavior/workflow change includes documentation in `docs/` or `README.md`.
 - [x] 8. Distinguish empty quote responses from successful comparisons.
   Verification: Vitest empty/nonempty status assertions.
   Result: npm test passed (23 tests).
-- [~] 9. Display unavailable premiums honestly, preserving zero.
+- [x] 9. Display unavailable premiums honestly, preserving zero.
   Verification: Vitest missing/invalid/zero/normal premium cases.
-- [ ] 10. Expose results loading through aria-busy.
+  Result: npm test passed (39 tests).
+- [~] 10. Expose results loading through aria-busy.
   Verification: Vitest pending/success/failure DOM assertions.
 - [ ] 11. Refresh repository tooling guidance and verification entry points.
   Verification: Cross-check package/scripts; documentation checker.

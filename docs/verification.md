@@ -79,6 +79,11 @@ not a transport error. Both the status message and results panel explain that no
 underwriters returned a quote; premium-order success text is reserved for a
 nonempty comparison.
 
+Premium rendering accepts finite, nonnegative numbers and nonblank numeric
+strings. Missing, blank, nonnumeric, negative, or nonfinite values display
+`Unavailable`; an actual zero still displays `£0.00`. Tests check both helper
+formatting and the distinction on rendered quote cards.
+
 ## Browser-facing HTTP and SQL smoke check
 
 Start SQL Server, initialize the database, run the core engine, and launch the
