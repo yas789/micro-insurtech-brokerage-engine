@@ -28,6 +28,9 @@ Current checks:
 - Composer validation runs in strict mode, so `php-gateway/composer.json` must include required metadata such as `license`.
 - Install PHP gateway development dependencies and run PHPUnit gateway tests.
 - Install frontend dependencies with `npm ci` and run Vitest quote flow tests.
+- Both frontend and integration jobs cache npm downloads through
+  `actions/setup-node`, keyed by `frontend/package-lock.json`. `npm ci` still
+  installs dependencies on every run; `node_modules` is not cached.
 - Install Playwright Chromium and run the full deterministic quote journey
   integration runner: browser -> frontend proxy -> PHP gateway -> .NET core ->
   SQL Server, with a local postcode fixture and SQL record assertions.

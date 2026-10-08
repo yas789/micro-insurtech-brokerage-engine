@@ -49,9 +49,10 @@ Each behavior/workflow change includes documentation in `docs/` or `README.md`.
   Verification: Real repo pass and isolated missing-file failure.
   Result: Repo passed; isolated archived fixture without verification.md failed
   with the expected missing-file message (exit 1).
-- [~] 13. Cache npm downloads in frontend and integration CI jobs.
+- [x] 13. Cache npm downloads in frontend and integration CI jobs.
   Verification: Workflow validation and remote CI run.
-- [ ] 14. Upload browser diagnostics on integration failures.
+  Result: actionlint and docs check passed; cache execution will be checked in PR CI.
+- [~] 14. Upload browser diagnostics on integration failures.
   Verification: Workflow validation and failure-artifact exercise.
 - [ ] 15. Cancel superseded PR CI runs without cancelling manual runs.
   Verification: Workflow validation and two-update PR exercise.
