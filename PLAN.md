@@ -45,9 +45,11 @@ Each behavior/workflow change includes documentation in `docs/` or `README.md`.
   Verification: Cross-check package/scripts; documentation checker.
   Result: Docs checker and Composer validation passed; npm scripts confirmed;
   all 3 Python frontend proxy tests passed.
-- [~] 12. Require docs/verification.md in documentation check.
+- [x] 12. Require docs/verification.md in documentation check.
   Verification: Real repo pass and isolated missing-file failure.
-- [ ] 13. Cache npm downloads in frontend and integration CI jobs.
+  Result: Repo passed; isolated archived fixture without verification.md failed
+  with the expected missing-file message (exit 1).
+- [~] 13. Cache npm downloads in frontend and integration CI jobs.
   Verification: Workflow validation and remote CI run.
 - [ ] 14. Upload browser diagnostics on integration failures.
   Verification: Workflow validation and failure-artifact exercise.

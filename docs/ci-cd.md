@@ -20,6 +20,9 @@ Current checks:
 - Restore and build the .NET core engine.
 - Run .NET core engine unit tests.
 - Validate required documentation files exist.
+- The documentation check requires `docs/verification.md` as well as the setup,
+  architecture, persistence, and workflow guides. Missing or empty required files
+  fail the check; it checks presence, not prose accuracy.
 - Validate PHP file syntax when PHP is available in CI.
 - Validate PHP Composer metadata.
 - Composer validation runs in strict mode, so `php-gateway/composer.json` must include required metadata such as `license`.
