@@ -26,9 +26,10 @@ Each behavior/workflow change includes documentation in `docs/` or `README.md`.
 - [x] 5. Normalize upstream field-keyed validation errors at gateway.
   Verification: PHPUnit realistic ASP.NET binding-error responses.
   Result: PHPUnit passed (60 tests, 129 assertions).
-- [~] 6. Display useful errors for non-JSON quote responses.
+- [x] 6. Display useful errors for non-JSON quote responses.
   Verification: Vitest HTML, empty, malformed response cases.
-- [ ] 7. Prevent overlapping submissions per form.
+  Result: npm test passed (19 tests).
+- [~] 7. Prevent overlapping submissions per form.
   Verification: Vitest deferred requests and subsequent submission.
 - [ ] 8. Distinguish empty quote responses from successful comparisons.
   Verification: Vitest empty/nonempty status assertions.

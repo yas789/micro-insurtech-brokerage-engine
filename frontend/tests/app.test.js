@@ -221,20 +221,24 @@ describe('quote frontend', () => {
     expect(results.textContent).toBe('No quotes to display yet.');
   });
 
-  it('displays invalid JSON response failures', async () => {
+  it.each([
+    ['HTML error', false, '<html>Bad gateway</html>', 'Quote request failed. Please try again.'],
+    ['empty error', false, '', 'Quote request failed. Please try again.'],
+    ['malformed success', true, '{broken', 'Gateway returned an invalid response. Please try again.'],
+    ['empty success', true, '', 'Gateway returned an invalid response. Please try again.'],
+  ])('displays a readable message for %s responses', async (_label, ok, body, message) => {
     const { form, button, status, results } = createDomHarness();
     const fetchQuotes = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => {
-        throw new Error('Invalid JSON');
-      },
+      ok,
+      json: async () => JSON.parse(body),
     });
 
     await handleQuoteSubmit(fakeSubmitEvent(), form, button, status, results, fetchQuotes);
 
     expect(status.classList.contains('error')).toBe(true);
-    expect(status.textContent).toBe('Invalid JSON');
+    expect(status.textContent).toBe(message);
     expect(results.textContent).toBe('No quotes to display yet.');
+    expect(button.disabled).toBe(false);
   });
 
   it('clears previous error state after a later successful request', async () => {

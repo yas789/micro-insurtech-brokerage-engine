@@ -62,6 +62,13 @@ message order and omitting ProblemDetails metadata. Existing flat error lists
 pass through. Unusable dictionary entries fall back to a readable validation
 message; upstream server failures retain the safe HTTP 502 gateway response.
 
+## Frontend unit checks
+
+From `frontend/`, run `npm ci` then `npm test` for Vitest DOM tests. Quote
+responses that are HTML, empty, or malformed JSON produce a readable retry
+message instead of a parser exception. Both successful and failed HTTP responses
+are covered; the submit button is restored after failure.
+
 ## Browser-facing HTTP and SQL smoke check
 
 Start SQL Server, initialize the database, run the core engine, and launch the

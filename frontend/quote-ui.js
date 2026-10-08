@@ -28,7 +28,14 @@ export async function handleQuoteSubmit(event, formElement, buttonElement, statu
       headers: jsonHeaders,
       body: JSON.stringify(requestPayload),
     });
-    const responseBody = await response.json();
+    let responseBody;
+    try {
+      responseBody = await response.json();
+    } catch {
+      throw new Error(response.ok
+        ? 'Gateway returned an invalid response. Please try again.'
+        : 'Quote request failed. Please try again.');
+    }
 
     if (!response.ok) {
       throw new Error(formatError(responseBody));
