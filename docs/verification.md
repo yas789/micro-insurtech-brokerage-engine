@@ -56,6 +56,12 @@ whitespace. Surrounding whitespace is trimmed for validation. Controller tests
 verify invalid addresses never reach rating or persistence; this is syntax
 validation, not a check that the mailbox exists.
 
+The gateway converts ASP.NET HTTP 400 field-keyed `errors` dictionaries (including
+JSON binding failures) into the browser contract `errors: string[]`, preserving
+message order and omitting ProblemDetails metadata. Existing flat error lists
+pass through. Unusable dictionary entries fall back to a readable validation
+message; upstream server failures retain the safe HTTP 502 gateway response.
+
 ## Browser-facing HTTP and SQL smoke check
 
 Start SQL Server, initialize the database, run the core engine, and launch the

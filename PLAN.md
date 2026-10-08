@@ -23,9 +23,10 @@ Each behavior/workflow change includes documentation in `docs/` or `README.md`.
   Verification: .NET controller email acceptance/rejection tests.
   Result: Build passed; 34 controller tests passed with DOTNET_ROLL_FORWARD=Major
   on .NET 9. Native .NET 8 verification is deferred to CI.
-- [~] 5. Normalize upstream field-keyed validation errors at gateway.
+- [x] 5. Normalize upstream field-keyed validation errors at gateway.
   Verification: PHPUnit realistic ASP.NET binding-error responses.
-- [ ] 6. Display useful errors for non-JSON quote responses.
+  Result: PHPUnit passed (60 tests, 129 assertions).
+- [~] 6. Display useful errors for non-JSON quote responses.
   Verification: Vitest HTML, empty, malformed response cases.
 - [ ] 7. Prevent overlapping submissions per form.
   Verification: Vitest deferred requests and subsequent submission.
