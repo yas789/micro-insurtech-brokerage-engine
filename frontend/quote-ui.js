@@ -3,6 +3,7 @@ const processingQuotesMessage = 'Quote request is being processed.';
 const quotesReturnedMessage = 'Quotes returned in premium order.';
 const noQuotesMessage = 'No quotes to display yet.';
 const quoteApiPath = '/api/quotes';
+const pendingQuoteForms = new WeakSet();
 const jsonHeaders = {
   'Content-Type': 'application/json',
   Accept: 'application/json',
@@ -17,7 +18,12 @@ export function bindQuoteForm(formElement, buttonElement, statusElement, results
 export async function handleQuoteSubmit(event, formElement, buttonElement, statusElement, resultsElement, quoteRequest = fetch) {
   event.preventDefault();
 
+  if (pendingQuoteForms.has(formElement)) {
+    return;
+  }
+
   const requestPayload = buildQuotePayload(new FormData(formElement));
+  pendingQuoteForms.add(formElement);
   setLoading(buttonElement, true);
   setStatus(statusElement, requestingQuotesMessage);
   renderEmptyState(resultsElement, processingQuotesMessage);
@@ -47,6 +53,7 @@ export async function handleQuoteSubmit(event, formElement, buttonElement, statu
     renderEmptyState(resultsElement, noQuotesMessage);
     setStatus(statusElement, error instanceof Error ? error.message : 'Quote request failed.', true);
   } finally {
+    pendingQuoteForms.delete(formElement);
     setLoading(buttonElement, false);
   }
 }

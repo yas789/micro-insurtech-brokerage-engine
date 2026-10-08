@@ -182,6 +182,44 @@ describe('quote frontend', () => {
     await submitPromise;
   });
 
+  it.each([true, false])('ignores overlapping submissions and permits retry after ok=%s', async (ok) => {
+    const { form, button, status, results } = createDomHarness();
+    const pending = createDeferredResponse();
+    const fetchQuotes = vi.fn().mockReturnValueOnce(pending.promise).mockResolvedValue({
+      ok: true,
+      json: async () => ({ quotes: [] }),
+    });
+
+    const first = handleQuoteSubmit(fakeSubmitEvent(), form, button, status, results, fetchQuotes);
+    const duplicateEvent = fakeSubmitEvent();
+    await handleQuoteSubmit(duplicateEvent, form, button, status, results, fetchQuotes);
+
+    expect(duplicateEvent.preventDefault).toHaveBeenCalledOnce();
+    expect(fetchQuotes).toHaveBeenCalledOnce();
+    expect(button.disabled).toBe(true);
+    expect(results.textContent).toBe('Quote request is being processed.');
+    pending.resolve({ ok, json: async () => ok ? { quotes: [] } : { error: 'Gateway failed.' } });
+    await first;
+    expect(button.disabled).toBe(false);
+
+    await handleQuoteSubmit(fakeSubmitEvent(), form, button, status, results, fetchQuotes);
+    expect(fetchQuotes).toHaveBeenCalledTimes(2);
+  });
+
+  it('allows separate forms to submit independently', async () => {
+    const first = createDomHarness();
+    const second = createDomHarness();
+    const pending = createDeferredResponse();
+    const fetchQuotes = vi.fn().mockReturnValue(pending.promise);
+
+    const firstSubmit = handleQuoteSubmit(fakeSubmitEvent(), first.form, first.button, first.status, first.results, fetchQuotes);
+    const secondSubmit = handleQuoteSubmit(fakeSubmitEvent(), second.form, second.button, second.status, second.results, fetchQuotes);
+
+    expect(fetchQuotes).toHaveBeenCalledTimes(2);
+    pending.resolve({ ok: true, json: async () => ({ quotes: [] }) });
+    await Promise.all([firstSubmit, secondSubmit]);
+  });
+
   it('binds the form submit event to quote submission', async () => {
     const { form, button, status, results } = createDomHarness();
     const fetchQuotes = vi.fn().mockResolvedValue({

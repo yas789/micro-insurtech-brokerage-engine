@@ -29,9 +29,10 @@ Each behavior/workflow change includes documentation in `docs/` or `README.md`.
 - [x] 6. Display useful errors for non-JSON quote responses.
   Verification: Vitest HTML, empty, malformed response cases.
   Result: npm test passed (19 tests).
-- [~] 7. Prevent overlapping submissions per form.
+- [x] 7. Prevent overlapping submissions per form.
   Verification: Vitest deferred requests and subsequent submission.
-- [ ] 8. Distinguish empty quote responses from successful comparisons.
+  Result: npm test passed (22 tests), including independent forms.
+- [~] 8. Distinguish empty quote responses from successful comparisons.
   Verification: Vitest empty/nonempty status assertions.
 - [ ] 9. Display unavailable premiums honestly, preserving zero.
   Verification: Vitest missing/invalid/zero/normal premium cases.

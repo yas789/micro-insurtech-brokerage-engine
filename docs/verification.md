@@ -69,6 +69,11 @@ responses that are HTML, empty, or malformed JSON produce a readable retry
 message instead of a parser exception. Both successful and failed HTTP responses
 are covered; the submit button is restored after failure.
 
+Only one quote submission may be in flight per form, including programmatically
+dispatched submit events. Duplicate submissions leave the pending UI intact;
+success or failure releases the guard so another request can be made. Separate
+forms remain independent. This browser guard does not provide API idempotency.
+
 ## Browser-facing HTTP and SQL smoke check
 
 Start SQL Server, initialize the database, run the core engine, and launch the
