@@ -13,9 +13,10 @@ Each behavior/workflow change includes documentation in `docs/` or `README.md`.
 - [x] 1. Align gateway year-built range with core (1500–2100).
   Verification: PHPUnit gateway boundary and no-forwarding tests.
   Result: PHPUnit passed (40 tests, 80 assertions).
-- [~] 2. Validate trimmed gateway text lengths using UTF-16 storage units.
+- [x] 2. Validate trimmed gateway text lengths using UTF-16 storage units.
   Verification: PHPUnit ASCII/Unicode boundary and no-forwarding tests.
-- [ ] 3. Validate trimmed gateway email addresses.
+  Result: PHPUnit passed (52 tests, 110 assertions).
+- [~] 3. Validate trimmed gateway email addresses.
   Verification: PHPUnit whitespace and invalid-email cases.
 - [ ] 4. Strengthen direct core email validation.
   Verification: .NET controller email acceptance/rejection tests.

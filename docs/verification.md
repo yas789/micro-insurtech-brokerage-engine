@@ -39,6 +39,12 @@ regression test boots a separate PHP interpreter without Composer autoloading:
 the gateway explicitly loads its HTTP interface before the cURL implementation.
 This catches startup errors that service-only unit tests can hide.
 
+Gateway text limits match the core and SQL schema after trimming: first/last
+names 100, email 254, postcode 16. Lengths count UTF-16 units, not UTF-8 bytes
+or graphemes; supplementary characters such as emoji count as two. Boundary
+tests include ASCII, accented names, and emoji and verify rejected requests are
+not forwarded to the core.
+
 ## Browser-facing HTTP and SQL smoke check
 
 Start SQL Server, initialize the database, run the core engine, and launch the

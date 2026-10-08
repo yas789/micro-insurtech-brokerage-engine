@@ -87,6 +87,40 @@ final class GatewayRequestHandlerTest extends TestCase
         self::assertSame('http://core-engine.local/api/quotes', $httpClient->url);
     }
 
+    /** @dataProvider textLengthProvider */
+    public function testHandleChecksTextLengthsBeforeForwarding(string $section, string $field, string $value, ?string $error): void
+    {
+        $client = new GatewayFakeHttpClient(new HttpResponse(200, '{"quotes":[]}'));
+        $handler = $this->createHandler($client);
+        $payload = QuotePayloadFactory::validPayload();
+        $payload[$section][$field] = $value;
+
+        $response = $handler->handle('POST', '/api/quotes', json_encode($payload, JSON_THROW_ON_ERROR));
+
+        self::assertSame($error === null ? 200 : 400, $response['statusCode']);
+        self::assertSame($error === null ? 'http://core-engine.local/api/quotes' : '', $client->url);
+        if ($error !== null) {
+            self::assertSame(['errors' => [$error]], $response['body']);
+        }
+    }
+
+    public static function textLengthProvider(): iterable
+    {
+        foreach (['firstName' => 'first name', 'lastName' => 'last name'] as $field => $label) {
+            yield "$field boundary" => ['client', $field, ' ' . str_repeat('A', 100) . ' ', null];
+            yield "$field overflow" => ['client', $field, str_repeat('A', 101), "Client $label must be 100 characters or fewer."];
+        }
+        yield 'accented boundary' => ['client', 'firstName', str_repeat('é', 100), null];
+        yield 'accented overflow' => ['client', 'firstName', str_repeat('é', 101), 'Client first name must be 100 characters or fewer.'];
+        yield 'supplementary boundary' => ['client', 'lastName', str_repeat('😀', 50), null];
+        yield 'supplementary overflow' => ['client', 'lastName', str_repeat('😀', 50) . 'A', 'Client last name must be 100 characters or fewer.'];
+        $email = str_repeat('a', 64) . '@' . str_repeat('b', 63) . '.' . str_repeat('c', 63) . '.' . str_repeat('d', 61);
+        yield 'email boundary' => ['client', 'email', $email, null];
+        yield 'email overflow' => ['client', 'email', $email . 'd', 'Client email must be 254 characters or fewer.'];
+        yield 'postcode boundary' => ['property', 'postcode', ' ' . str_repeat('A', 16) . ' ', null];
+        yield 'postcode overflow' => ['property', 'postcode', str_repeat('A', 17), 'Property postcode must be 16 characters or fewer.'];
+    }
+
     /** @dataProvider yearBuiltProvider */
     public function testHandleChecksYearBuiltBeforeForwarding(int $year, bool $valid): void
     {
