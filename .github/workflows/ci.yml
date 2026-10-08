@@ -134,3 +134,15 @@ jobs:
         env:
           SQLSERVER_SA_PASSWORD: Change_this_password_123!
         run: python3 scripts/run-integration.py
+
+      - name: Upload failed quote journey diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quote-journey-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+            logs/integration/
+          if-no-files-found: ignore
+          retention-days: 7

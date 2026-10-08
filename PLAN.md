@@ -52,9 +52,11 @@ Each behavior/workflow change includes documentation in `docs/` or `README.md`.
 - [x] 13. Cache npm downloads in frontend and integration CI jobs.
   Verification: Workflow validation and remote CI run.
   Result: actionlint and docs check passed; cache execution will be checked in PR CI.
-- [~] 14. Upload browser diagnostics on integration failures.
+- [x] 14. Upload browser diagnostics on integration failures.
   Verification: Workflow validation and failure-artifact exercise.
-- [ ] 15. Cancel superseded PR CI runs without cancelling manual runs.
+  Result: actionlint and docs check passed; paths match Playwright and integration
+  runner outputs. Actual failure-only upload remains unexercised unless CI fails.
+- [~] 15. Cancel superseded PR CI runs without cancelling manual runs.
   Verification: Workflow validation and two-update PR exercise.
 
 ## Environment and final verification
