@@ -161,6 +161,7 @@ describe('quote frontend', () => {
     expect(button.textContent).toBe('Generate quotes');
     expect(status.textContent).toBe('Quotes returned in premium order.');
     expect(results.textContent).toContain('AvivaScheme');
+    expect(results.getAttribute('aria-busy')).toBe('false');
   });
 
   it('reports an empty quote response consistently without marking it as an error', async () => {
@@ -186,12 +187,14 @@ describe('quote frontend', () => {
     expect(button.textContent).toBe('Generating...');
     expect(status.textContent).toBe('Requesting quotes from underwriters...');
     expect(results.textContent).toBe('Quote request is being processed.');
+    expect(results.getAttribute('aria-busy')).toBe('true');
 
     pendingResponse.resolve({
       ok: true,
       json: async () => ({ quotes: [] }),
     });
     await submitPromise;
+    expect(results.getAttribute('aria-busy')).toBe('false');
   });
 
   it.each([true, false])('ignores overlapping submissions and permits retry after ok=%s', async (ok) => {
@@ -209,6 +212,7 @@ describe('quote frontend', () => {
     expect(duplicateEvent.preventDefault).toHaveBeenCalledOnce();
     expect(fetchQuotes).toHaveBeenCalledOnce();
     expect(button.disabled).toBe(true);
+    expect(results.getAttribute('aria-busy')).toBe('true');
     expect(results.textContent).toBe('Quote request is being processed.');
     pending.resolve({ ok, json: async () => ok ? { quotes: [] } : { error: 'Gateway failed.' } });
     await first;
@@ -258,6 +262,7 @@ describe('quote frontend', () => {
     expect(status.classList.contains('error')).toBe(true);
     expect(status.textContent).toBe('A valid client email is required.');
     expect(results.textContent).toBe('No quotes to display yet.');
+    expect(results.getAttribute('aria-busy')).toBe('false');
   });
 
   it('displays network failures', async () => {
@@ -269,6 +274,7 @@ describe('quote frontend', () => {
     expect(status.classList.contains('error')).toBe(true);
     expect(status.textContent).toBe('Network unavailable');
     expect(results.textContent).toBe('No quotes to display yet.');
+    expect(results.getAttribute('aria-busy')).toBe('false');
   });
 
   it.each([
@@ -289,6 +295,7 @@ describe('quote frontend', () => {
     expect(status.textContent).toBe(message);
     expect(results.textContent).toBe('No quotes to display yet.');
     expect(button.disabled).toBe(false);
+    expect(results.getAttribute('aria-busy')).toBe('false');
   });
 
   it('clears previous error state after a later successful request', async () => {

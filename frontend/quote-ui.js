@@ -26,6 +26,7 @@ export async function handleQuoteSubmit(event, formElement, buttonElement, statu
   const requestPayload = buildQuotePayload(new FormData(formElement));
   pendingQuoteForms.add(formElement);
   setLoading(buttonElement, true);
+  resultsElement.setAttribute('aria-busy', 'true');
   setStatus(statusElement, requestingQuotesMessage);
   renderEmptyState(resultsElement, processingQuotesMessage);
 
@@ -59,6 +60,7 @@ export async function handleQuoteSubmit(event, formElement, buttonElement, statu
   } finally {
     pendingQuoteForms.delete(formElement);
     setLoading(buttonElement, false);
+    resultsElement.setAttribute('aria-busy', 'false');
   }
 }
 

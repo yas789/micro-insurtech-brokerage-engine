@@ -84,6 +84,11 @@ strings. Missing, blank, nonnumeric, negative, or nonfinite values display
 `Unavailable`; an actual zero still displays `£0.00`. Tests check both helper
 formatting and the distinction on rendered quote cards.
 
+The quote results container exposes `aria-busy="true"` while a request is in
+flight and resets to `false` after success, validation errors, network failures,
+or invalid JSON. Ignored duplicate submissions do not clear the busy state.
+The existing live status message continues to announce request outcomes.
+
 ## Browser-facing HTTP and SQL smoke check
 
 Start SQL Server, initialize the database, run the core engine, and launch the
