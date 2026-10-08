@@ -19,9 +19,11 @@ Each behavior/workflow change includes documentation in `docs/` or `README.md`.
 - [x] 3. Validate trimmed gateway email addresses.
   Verification: PHPUnit whitespace and invalid-email cases.
   Result: PHPUnit passed (58 tests, 126 assertions).
-- [~] 4. Strengthen direct core email validation.
+- [x] 4. Strengthen direct core email validation.
   Verification: .NET controller email acceptance/rejection tests.
-- [ ] 5. Normalize upstream field-keyed validation errors at gateway.
+  Result: Build passed; 34 controller tests passed with DOTNET_ROLL_FORWARD=Major
+  on .NET 9. Native .NET 8 verification is deferred to CI.
+- [~] 5. Normalize upstream field-keyed validation errors at gateway.
   Verification: PHPUnit realistic ASP.NET binding-error responses.
 - [ ] 6. Display useful errors for non-JSON quote responses.
   Verification: Vitest HTML, empty, malformed response cases.
@@ -46,7 +48,9 @@ Each behavior/workflow change includes documentation in `docs/` or `README.md`.
 
 ## Environment and final verification
 
-- Local .NET runtime is 9 only; use an isolated .NET 8 runtime for net8 tests.
+- Local .NET runtime is 9 only. Isolated runtime download succeeded but the test
+  runner still selected the system host; isolated SDK download was interrupted.
+  User requested moving on. Local tests use DOTNET_ROLL_FORWARD=Major; CI uses 8.
 - Homebrew PHP installation failed before installation; standalone PHP 8.2.32
   downloaded to the harness temporary directory runs local PHPUnit checks.
   Composer dependencies are installed in ignored `php-gateway/vendor/`.

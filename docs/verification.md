@@ -50,6 +50,12 @@ Surrounding spaces, tabs, and line endings are accepted around an otherwise vali
 address; internal whitespace, blank addresses, and missing local/domain parts
 are rejected without forwarding.
 
+Direct core requests must supply a plain email mailbox parsed by .NET
+`MailAddress`, with a dotted domain, no display-name wrapper, and no internal
+whitespace. Surrounding whitespace is trimmed for validation. Controller tests
+verify invalid addresses never reach rating or persistence; this is syntax
+validation, not a check that the mailbox exists.
+
 ## Browser-facing HTTP and SQL smoke check
 
 Start SQL Server, initialize the database, run the core engine, and launch the

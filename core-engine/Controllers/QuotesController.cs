@@ -1,3 +1,4 @@
+using System.Net.Mail;
 using MicroInsurTech.CoreEngine.Dtos;
 using MicroInsurTech.CoreEngine.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -70,7 +71,7 @@ public sealed class QuotesController(
                 errors.Add("Client last name must be 100 characters or fewer.");
             }
 
-            if (string.IsNullOrWhiteSpace(request.Client.Email) || !request.Client.Email.Contains('@', StringComparison.Ordinal))
+            if (!IsValidEmail(request.Client.Email))
             {
                 errors.Add("A valid client email is required.");
             }
@@ -114,5 +115,19 @@ public sealed class QuotesController(
         }
 
         return errors;
+    }
+
+    private static bool IsValidEmail(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var email = value.Trim();
+        return !email.Any(char.IsWhiteSpace)
+            && MailAddress.TryCreate(email, out var address)
+            && string.Equals(address.Address, email, StringComparison.Ordinal)
+            && address.Host.Contains('.', StringComparison.Ordinal);
     }
 }
