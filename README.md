@@ -36,20 +36,32 @@ micro-insurtech-brokerage-engine/
       index.php
     src/
       BrokerService.php
+    tests/
   frontend/
     index.html
     app.js
+    quote-ui.js
     styles.css
+    package.json
+    package-lock.json
+    tests/
+    e2e/
   core-engine-tests/
     MicroInsurTech.CoreEngine.Tests.csproj
     Schemes/
     Services/
+    Controllers/
+  scripts/
+    run-integration.py
+    verify-quote-journey.py
+    tests/
   docs/
     architecture.md
     specification.md
     setup.md
     implementation-roadmap.md
     database-persistence.md
+    verification.md
 ```
 
 ## Layer Communication
@@ -85,3 +97,19 @@ The browser must not call the .NET core engine directly. The PHP gateway owns br
 ## Current Status
 
 Core API slice implemented: SQL schema, C# DTOs, `IUnderwriterService`, three underwriter schemes, `POST /api/quotes`, postcode region lookup, concurrent quote orchestration, EF Core SQL persistence, and unit tests. PHP gateway quote forwarding and frontend quote capture/result rendering are implemented.
+
+## Verification quick start
+
+| Check | Working directory | Commands |
+| --- | --- | --- |
+| Documentation | Repository root | `sh scripts/check-docs.sh` |
+| Core unit tests (.NET 8) | Repository root | `dotnet test core-engine-tests/MicroInsurTech.CoreEngine.Tests.csproj` |
+| Gateway unit tests | `php-gateway/` | `composer install`, then `composer test` |
+| Frontend unit tests | `frontend/` | `npm ci`, then `npm test` |
+| Frontend proxy tests | Repository root | `python3 -m unittest discover -s scripts/tests` |
+| Full HTTP/SQL/browser journey | Repository root | `python3 scripts/run-integration.py` |
+
+The integration runner requires Docker with amd64 Linux support, .NET 8,
+PHP 8.1+ with cURL, Python 3.10+, Node 22+, and installed Playwright Chromium.
+For setup, browser-only commands, and what each check proves, see
+[setup](docs/setup.md) and [verification](docs/verification.md).

@@ -170,8 +170,8 @@ input:focus {
   font-size: 1rem;
 }
 
-#submit-button:hover,
-.accept-button:hover {
+#submit-button:hover:not(:disabled),
+.accept-button:hover:not(:disabled) {
   background: var(--accent-dark);
 }
 
@@ -259,6 +259,19 @@ dd {
 .accept-button {
   width: 100%;
   padding: 12px 16px;
+}
+
+.accept-button:disabled {
+  background: var(--line);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.acceptance-notice {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
 }
 
 @media (max-width: 860px) {

@@ -15,7 +15,9 @@ Responsibilities:
 - Submit quote requests asynchronously to the PHP gateway.
 - Display loading, validation, error, and result states.
 - Render returned quotes in ascending premium order.
-- Provide an `Accept Cover` action for each quote option.
+- Display a disabled `Accept Cover — unavailable` button for each quote option,
+  with an explanation that this slice supports comparison only. Acceptance is
+  deferred until its workflow and backend endpoint exist.
 
 Technology constraints:
 

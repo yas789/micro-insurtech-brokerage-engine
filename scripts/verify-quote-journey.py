@@ -27,10 +27,10 @@ def request(base_url, payload=None, path="/api/quotes"):
         return response.status, json.load(response)
 
 
-def payload(email, postcode="SW1A 1AA"):
+def payload(email, postcode="SW1A 1AA", rebuild_cost=750000):
     return {
         "client": {"firstName": "Jane", "lastName": "Broker", "email": email},
-        "property": {"postcode": postcode, "yearBuilt": 1910, "rebuildCost": 750000, "isUnoccupied": False},
+        "property": {"postcode": postcode, "yearBuilt": 1910, "rebuildCost": rebuild_cost, "isUnoccupied": False},
     }
 
 
@@ -95,7 +95,7 @@ def verify_quotes(quotes):
     check(actual == expected, f"Unexpected quote pricing or ordering: {actual}")
 
 
-def verify_persistence(email, quotes, postcode="SW1A 1AA"):
+def verify_persistence(email, quotes, postcode="SW1A 1AA", rebuild_cost=750000):
     rows = persisted_rows(email)
     check(len(rows) == 3, f"Expected three saved quotes for {email}, found {len(rows)}")
     check(len({row["ClientID"] for row in rows}) == 1, "Expected exactly one saved client")
@@ -104,7 +104,7 @@ def verify_persistence(email, quotes, postcode="SW1A 1AA"):
     for row, quote in zip(rows, quotes):
         check((row["FirstName"], row["LastName"], row["Email"]) == ("Jane", "Broker", email), "Client data mismatch")
         check((row["Postcode"], row["YearBuilt"], row["RebuildCost"], row["IsUnoccupied"])
-              == (postcode, 1910, 750000, False), "Property data mismatch")
+              == (postcode, 1910, rebuild_cost, False), "Property data mismatch")
         check((row["UnderwriterName"], row["PremiumAmount"], row["RiskRating"], row["Region"])
               == (quote["underwriterName"], quote["premiumAmount"], quote["riskRating"], quote.get("region")),
               "Saved quote differs from HTTP response")
@@ -154,6 +154,18 @@ def main():
     check(status == 400 and body.get("errors"), "Core validation should reject year 1499")
     check(persisted_rows(email) == [], "Invalid request must not persist a client")
     print("PASS: gateway and core validation errors propagate without persistence")
+
+    email = f"maximum-{uuid4().hex}@example.com"
+    status, body = request(args.base_url, payload(email, rebuild_cost=99999999.99))
+    check(status == 200, f"Maximum rebuild cost should succeed: {status} {body}")
+    verify_quotes(body["quotes"])
+    verify_persistence(email, body["quotes"], rebuild_cost=99999999.99)
+    for cost in (100000000, 99999999.995, 750000.001, 0.001):
+        email = f"invalid-cost-{uuid4().hex}@example.com"
+        status, body = request(args.base_url, payload(email, rebuild_cost=cost))
+        check(status == 400 and body.get("errors"), f"Expected validation failure for rebuild cost {cost}")
+        check(persisted_rows(email) == [], "Invalid rebuild cost must not persist a client")
+    print("PASS: SQL rebuild-cost maximum persists; overflow and fractional pennies are rejected")
 
     if args.unavailable_gateway_url:
         email = f"unavailable-{uuid4().hex}@example.com"

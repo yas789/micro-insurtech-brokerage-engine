@@ -7,6 +7,10 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   documentation:
     name: Documentation Check
@@ -85,6 +89,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install frontend dependencies
         working-directory: frontend
@@ -117,6 +123,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install frontend dependencies
         working-directory: frontend
@@ -130,3 +138,15 @@ jobs:
         env:
           SQLSERVER_SA_PASSWORD: Change_this_password_123!
         run: python3 scripts/run-integration.py
+
+      - name: Upload failed quote journey diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quote-journey-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+            logs/integration/
+          if-no-files-found: ignore
+          retention-days: 7

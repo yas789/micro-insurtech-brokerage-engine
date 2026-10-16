@@ -1,3 +1,4 @@
+using System.Net.Mail;
 using MicroInsurTech.CoreEngine.Dtos;
 using MicroInsurTech.CoreEngine.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +15,7 @@ public sealed class QuotesController(
     private const int MaxClientLastNameLength = 100;
     private const int MaxClientEmailLength = 254;
     private const int MaxPropertyPostcodeLength = 16;
+    private const decimal MaxRebuildCost = 99999999.99m;
 
     [HttpPost]
     [ProducesResponseType(typeof(QuoteResponse), StatusCodes.Status200OK)]
@@ -69,7 +71,7 @@ public sealed class QuotesController(
                 errors.Add("Client last name must be 100 characters or fewer.");
             }
 
-            if (string.IsNullOrWhiteSpace(request.Client.Email) || !request.Client.Email.Contains('@', StringComparison.Ordinal))
+            if (!IsValidEmail(request.Client.Email))
             {
                 errors.Add("A valid client email is required.");
             }
@@ -103,7 +105,29 @@ public sealed class QuotesController(
         {
             errors.Add("Property rebuild cost must be greater than zero.");
         }
+        else if (request.Property.RebuildCost > MaxRebuildCost)
+        {
+            errors.Add("Property rebuild cost must be 99999999.99 or less.");
+        }
+        else if (decimal.Round(request.Property.RebuildCost, 2) != request.Property.RebuildCost)
+        {
+            errors.Add("Property rebuild cost must have at most two decimal places.");
+        }
 
         return errors;
+    }
+
+    private static bool IsValidEmail(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var email = value.Trim();
+        return !email.Any(char.IsWhiteSpace)
+            && MailAddress.TryCreate(email, out var address)
+            && string.Equals(address.Address, email, StringComparison.Ordinal)
+            && address.Host.Contains('.', StringComparison.Ordinal);
     }
 }
