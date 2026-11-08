@@ -1,4 +1,72 @@
-# Codebase improvement plan
+# Saved comparison delivery plan
+
+## Current feature
+
+Goal: reopen original saved comparisons by private link and keep the newest 20
+references in this browser. Branch: `feature/quote-history`, based on `dev`
+at `4a6cb31`. Feature PR targets `dev`; production promotion is separate.
+Contracts and acceptance criteria: `docs/quote-history.md`.
+
+Baseline: submissions already persist a new client/property and quote set before
+success. There is no retrieval endpoint, public reference, or browser history.
+The SQL initializer preserves existing tables but does not upgrade them.
+
+Execute one item at a time; record actual verification before committing each
+item. No implementation is included in step 1. Prior completed work is retained
+below for historical context.
+
+- [x] 1. Document saved comparison contracts and delivery plan.
+  Verification: documentation checker and review against existing consumers.
+  Result: docs and whitespace checks pass; additive POST fields preserve current
+  quotes consumers. Contract excludes identity data and defines legacy upgrades.
+- [ ] 2. Add comparison references and timestamps to SQL schema.
+  Verification: fresh SQL, populated legacy upgrade, repeated upgrade, unique references.
+- [ ] 3. Support comparison schema upgrades in local tooling.
+  Verification: fresh/legacy/current/partial schema integration checks.
+- [ ] 4. Map saved comparison metadata in EF Core.
+  Verification: build and EF mapping tests.
+- [ ] 5. Persist and return saved comparison metadata.
+  Verification: persistence tests, including distinct references and empty results.
+- [ ] 6. Include comparison references in quote responses.
+  Verification: controller success and failure-side-effect tests.
+- [ ] 7. Read saved comparisons without recalculating quotes.
+  Verification: retrieval service tests for stored values, missing/empty results, identity exclusion.
+- [ ] 8. Expose saved comparison retrieval in the core API.
+  Verification: endpoint tests for valid, malformed, missing references and read-only behavior.
+- [ ] 9. Add saved comparison retrieval to the gateway client.
+  Verification: PHP HTTP-client and upstream-failure tests.
+- [ ] 10. Route saved comparison requests through PHP.
+  Verification: route/method/reference tests and no-forwarding checks.
+- [ ] 11. Preserve retrieval response headers through the local proxy.
+  Verification: no-store headers and proxy regression tests.
+- [ ] 12. Display saved comparison references and private links.
+  Verification: DOM metadata/link tests and existing submission regressions.
+- [ ] 13. Open saved comparisons from private links.
+  Verification: direct opening, malformed/missing links, network errors, no POST.
+- [ ] 14. Prevent stale comparison loads from replacing current results.
+  Verification: deferred retrieval/generation race tests.
+- [ ] 15. Store bounded browser comparison history.
+  Verification: storage ordering, bounds, deduplication, corrupt/blocked storage tests.
+- [ ] 16. Render recent comparisons with reopen actions.
+  Verification: DOM history rendering, updates, reopening, no client information.
+- [ ] 17. Add local history removal and accessible navigation.
+  Verification: DOM and browser removal/clear/focus checks with no server deletion.
+- [ ] 18. Verify saved comparison retrieval against SQL Server.
+  Verification: full-stack saved metadata/value comparison, no writes, missing reference.
+- [ ] 19. Cover comparison links and browser history in Playwright.
+  Verification: real-stack history/link/failure browser journeys.
+- [ ] 20. Finalize saved comparison documentation and verification.
+  Verification: full CI, whitespace checks, all-commit and full-diff review, feature PR.
+
+## Blockers and verification notes
+
+Local environment has .NET 9 only; Docker, PHP, and Composer are absent from PATH.
+Use .NET roll-forward locally and native .NET 8/SQL/PHP in CI. SQL-dependent steps
+must pass CI before continuing dependent implementation.
+
+---
+
+# Prior codebase improvement plan
 
 ## Goal and baseline
 
