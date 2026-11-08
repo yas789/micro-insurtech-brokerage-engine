@@ -76,5 +76,9 @@ or other docs in the same commit. Verify each layer before the next; real SQL
 integration proves uniqueness/upgrade behavior and read-only retrieval, while
 Playwright proves private links, reloads, local removal, and failure recovery.
 
-Implementation status: contract planned; code implementation follows on
-`feature/quote-history`. Production deployment remains placeholder-only.
+The fresh schema includes comparison metadata. Upgrade existing databases using
+`database/upgrades/001-saved-comparisons.sql`; it preserves rows and backfills from
+client submission time. CI runs `scripts/verify-comparison-schema.py` against a
+disposable database to check fresh/legacy/repeated application and uniqueness.
+API and UI implementation follows on `feature/quote-history`.
+Production deployment remains placeholder-only.

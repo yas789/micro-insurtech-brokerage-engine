@@ -19,7 +19,7 @@ below for historical context.
   Verification: documentation checker and review against existing consumers.
   Result: docs and whitespace checks pass; additive POST fields preserve current
   quotes consumers. Contract excludes identity data and defines legacy upgrades.
-- [ ] 2. Add comparison references and timestamps to SQL schema.
+- [~] 2. Add comparison references and timestamps to SQL schema.
   Verification: fresh SQL, populated legacy upgrade, repeated upgrade, unique references.
 - [ ] 3. Support comparison schema upgrades in local tooling.
   Verification: fresh/legacy/current/partial schema integration checks.

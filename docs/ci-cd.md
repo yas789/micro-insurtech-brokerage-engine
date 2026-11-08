@@ -22,6 +22,10 @@ Expected workflow:
 
 Current checks:
 
+- After full-stack integration, verify fresh and populated legacy saved-comparison
+  schema upgrades in a disposable SQL database, including repeat application,
+  original-price preservation, and reference uniqueness.
+
 - Restore and build the .NET core engine.
 - Run .NET core engine unit tests.
 - Validate required documentation files exist.
