@@ -19,9 +19,10 @@ below for historical context.
   Verification: documentation checker and review against existing consumers.
   Result: docs and whitespace checks pass; additive POST fields preserve current
   quotes consumers. Contract excludes identity data and defines legacy upgrades.
-- [~] 2. Add comparison references and timestamps to SQL schema.
+- [x] 2. Add comparison references and timestamps to SQL schema.
   Verification: fresh SQL, populated legacy upgrade, repeated upgrade, unique references.
-- [ ] 3. Support comparison schema upgrades in local tooling.
+  Result: all five checks passed in CI run 42537192314, including real SQL upgrade verifier.
+- [~] 3. Support comparison schema upgrades in local tooling.
   Verification: fresh/legacy/current/partial schema integration checks.
 - [ ] 4. Map saved comparison metadata in EF Core.
   Verification: build and EF mapping tests.

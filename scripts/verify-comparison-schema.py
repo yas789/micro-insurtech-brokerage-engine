@@ -22,8 +22,10 @@ def main():
     sql(f"IF DB_ID('{DATABASE}') IS NOT NULL DROP DATABASE [{DATABASE}]; CREATE DATABASE [{DATABASE}];", "master")
     try:
         sql(schema)
-        sql(upgrade)
-        sql(upgrade)
+        sql("DROP TABLE dbo.Quotes; DROP TABLE dbo.Properties; DROP TABLE dbo.Clients;")
+        initialize = dict(os.environ, SQLSERVER_DATABASE_NAME=DATABASE)
+        subprocess.run(["sh", str(ROOT / "scripts/apply-local-schema.sh")], env=initialize, check=True)
+        subprocess.run(["sh", str(ROOT / "scripts/apply-local-schema.sh")], env=initialize, check=True)
         # Reconstruct the pre-feature schema without relying on Git or a fixture copy.
         sql("""DROP INDEX UX_Properties_QuoteReference ON dbo.Properties;
 ALTER TABLE dbo.Properties DROP CONSTRAINT DF_Properties_QuoteReference, DF_Properties_CreatedAt;
@@ -31,7 +33,7 @@ ALTER TABLE dbo.Properties DROP COLUMN QuoteReference, CreatedAt;
 INSERT dbo.Clients (FirstName,LastName,Email,CreatedAt) VALUES ('Legacy','Client','legacy@example.com','2025-01-02');
 INSERT dbo.Properties (ClientID,Postcode,YearBuilt,RebuildCost,IsUnoccupied) VALUES (1,'SW1A 1AA',1910,750000,0),(1,'SW1A 1AA',2000,500000,1);
 INSERT dbo.Quotes (PropertyID,UnderwriterName,PremiumAmount,RiskRating) VALUES (1,'Original',123.45,'Low');""")
-        sql(upgrade)
+        subprocess.run(["sh", str(ROOT / "scripts/apply-local-schema.sh")], env=initialize, check=True)
         sql("SELECT QuoteReference,CreatedAt INTO dbo.BeforeRerun FROM dbo.Properties;")
         sql(upgrade)
         sql("""IF (SELECT COUNT(*) FROM dbo.Properties) <> 2 OR (SELECT COUNT(*) FROM dbo.Quotes WHERE PremiumAmount=123.45) <> 1
@@ -52,6 +54,10 @@ BEGIN CATCH
     IF ERROR_NUMBER() NOT IN (2601,2627) THROW;
 END CATCH;""")
         print("PASS: fresh schema, populated legacy upgrade, repeatability, preserved prices and unique references")
+        sql("DROP TABLE dbo.Quotes;")
+        result = subprocess.run(["sh", str(ROOT / "scripts/apply-local-schema.sh")], env=initialize)
+        if result.returncode == 0:
+            raise RuntimeError("Initializer accepted an incomplete schema")
     finally:
         sql(f"DROP DATABASE [{DATABASE}];", "master")
 

@@ -39,24 +39,19 @@ table_count=$(docker exec "$container_name" /opt/mssql-tools18/bin/sqlcmd \
 case "$table_count" in
     3)
         echo "Quote tables already exist in '$database_name'; preserving existing records."
-        exit 0
         ;;
-    0) ;;
+    0)
+        docker cp "$repo_root/database/schema.sql" "$container_name:/tmp/schema.sql"
+        docker exec "$container_name" /opt/mssql-tools18/bin/sqlcmd \
+            -S localhost -U sa -P "$sa_password" -C -b -d "$database_name" -i /tmp/schema.sql
+        ;;
     *)
         echo "Database '$database_name' has an incomplete quote schema. Resolve it before initializing." >&2
         exit 1
         ;;
 esac
 
-docker cp "$repo_root/database/schema.sql" "$container_name:/tmp/schema.sql"
-
+docker cp "$repo_root/database/upgrades/001-saved-comparisons.sql" "$container_name:/tmp/comparison-upgrade.sql"
 docker exec "$container_name" /opt/mssql-tools18/bin/sqlcmd \
-    -S localhost \
-    -U sa \
-    -P "$sa_password" \
-    -C \
-    -b \
-    -d "$database_name" \
-    -i /tmp/schema.sql
-
-echo "Applied database/schema.sql to database '$database_name'."
+    -S localhost -U sa -P "$sa_password" -C -b -d "$database_name" -i /tmp/comparison-upgrade.sql
+echo "Initialized/upgraded quote schema in database '$database_name'."
