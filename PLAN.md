@@ -37,8 +37,9 @@ below for historical context.
 - [x] 7. Read saved comparisons without recalculating quotes.
   Verification: retrieval service tests for stored values, missing/empty results, identity exclusion.
   Result: both snapshot/empty-set tests pass on .NET 9, including missing and read-only checks.
-- [ ] 8. Expose saved comparison retrieval in the core API.
+- [x] 8. Expose saved comparison retrieval in the core API.
   Verification: endpoint tests for valid, malformed, missing references and read-only behavior.
+  Result: all 76 backend tests pass using .NET 9 roll-forward.
 - [ ] 9. Add saved comparison retrieval to the gateway client.
   Verification: PHP HTTP-client and upstream-failure tests.
 - [ ] 10. Route saved comparison requests through PHP.
