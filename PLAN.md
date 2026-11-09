@@ -75,8 +75,10 @@ below for historical context.
   Result: verifier starts/parses and docs/whitespace checks pass; new SQL assertions
   pending CI. Latest CI PHP and .NET pass; browser suite needs status selectors
   scoped now that history has its own status region (addressed in step 19).
-- [ ] 19. Cover comparison links and browser history in Playwright.
+- [x] 19. Cover comparison links and browser history in Playwright.
   Verification: real-stack history/link/failure browser journeys.
+  Result: Playwright discovers 10 tests; fixed all ambiguous status selectors.
+  Real-stack execution deferred to CI, without blocking local work.
 - [ ] 20. Finalize saved comparison documentation and verification.
   Verification: full CI, whitespace checks, all-commit and full-diff review, feature PR.
 
