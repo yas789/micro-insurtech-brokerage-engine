@@ -1,5 +1,12 @@
 # Quote Journey Verification
 
+Saved comparison checks in `scripts/verify-quote-journey.py` compare POST/GET
+reference, UTC creation time, saved property and quote projection with SQL. They
+assert no-store headers, safe 400/404 responses, no writes during retrieval, and
+read a temporarily altered stored premium to prove retrieval does not rerate.
+The original premium is restored even if the assertion fails. Schema upgrade
+verification runs separately in a disposable database in CI.
+
 ## Unit checks
 
 From the repository root, with the .NET 8 SDK/runtime installed:

@@ -70,8 +70,11 @@ below for historical context.
   Verification: DOM and browser removal/clear/focus checks with no server deletion.
   Result: all 59 Vitest tests pass, including persisted removal/clear and focus.
   Real browser keyboard/mobile verification is pending step 19 CI.
-- [ ] 18. Verify saved comparison retrieval against SQL Server.
+- [x] 18. Verify saved comparison retrieval against SQL Server.
   Verification: full-stack saved metadata/value comparison, no writes, missing reference.
+  Result: verifier starts/parses and docs/whitespace checks pass; new SQL assertions
+  pending CI. Latest CI PHP and .NET pass; browser suite needs status selectors
+  scoped now that history has its own status region (addressed in step 19).
 - [ ] 19. Cover comparison links and browser history in Playwright.
   Verification: real-stack history/link/failure browser journeys.
 - [ ] 20. Finalize saved comparison documentation and verification.
