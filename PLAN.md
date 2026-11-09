@@ -54,8 +54,9 @@ below for historical context.
 - [x] 12. Display saved comparison references and private links.
   Verification: DOM metadata/link tests and existing submission regressions.
   Result: all 41 Vitest tests pass, including metadata/link rendering.
-- [ ] 13. Open saved comparisons from private links.
+- [x] 13. Open saved comparisons from private links.
   Verification: direct opening, malformed/missing links, network errors, no POST.
+  Result: all 47 Vitest tests pass, including fragment startup/navigation and GET-only retrieval.
 - [ ] 14. Prevent stale comparison loads from replacing current results.
   Verification: deferred retrieval/generation race tests.
 - [ ] 15. Store bounded browser comparison history.

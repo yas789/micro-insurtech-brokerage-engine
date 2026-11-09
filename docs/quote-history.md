@@ -104,4 +104,7 @@ upstream responses. Production routing must preserve it too.
 Successful browser submissions now display saved reference/time and a private
 fragment link. Invalid/missing metadata renders no link. Starting a new submission
 clears old metadata so an error cannot leave an unrelated saved link visible.
+Opening a `#quote=` fragment on startup or fragment navigation now retrieves the
+snapshot through PHP, shows a read-only property summary, and handles invalid,
+missing, unavailable, or malformed comparisons without submitting the form.
 Production deployment remains placeholder-only.
