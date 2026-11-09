@@ -8,6 +8,17 @@ namespace MicroInsurTech.CoreEngine.Tests.Services;
 
 public sealed class QuotePersistenceServiceTests
 {
+    [Fact]
+    public void ComparisonMetadata_MapsUniqueReferenceAndTimestamp()
+    {
+        using var context = CreateDbContext();
+        var entity = context.Model.FindEntityType(typeof(MicroInsurTech.CoreEngine.Data.Entities.PropertyEntity))!;
+        Assert.Contains(entity.GetIndexes(), index => index.IsUnique && index.Properties.Single().Name == "QuoteReference");
+        Assert.Equal(0, entity.FindProperty("CreatedAt")!.GetPrecision());
+        Assert.Equal(Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.Never,
+            entity.FindProperty("QuoteReference")!.ValueGenerated);
+    }
+
     private const string ValidFirstName = "Jane";
     private const string ValidLastName = "Broker";
     private const string ValidEmail = "jane@example.com";

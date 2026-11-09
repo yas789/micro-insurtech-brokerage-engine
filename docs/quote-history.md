@@ -81,4 +81,6 @@ The fresh schema includes comparison metadata. Upgrade existing databases using
 client submission time. CI runs `scripts/verify-comparison-schema.py` against a
 disposable database to check fresh/legacy/repeated application and uniqueness.
 API and UI implementation follows on `feature/quote-history`.
+EF maps the unique reference index and second-precision timestamp; references
+are application-generated, so SQL defaults also support standalone SQL inserts.
 Production deployment remains placeholder-only.

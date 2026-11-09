@@ -30,6 +30,9 @@ public sealed class BrokerageDbContext(DbContextOptions<BrokerageDbContext> opti
             entity.HasKey(property => property.PropertyId);
             entity.Property(property => property.PropertyId).HasColumnName("PropertyID");
             entity.Property(property => property.ClientId).HasColumnName("ClientID");
+            entity.Property(property => property.QuoteReference).ValueGeneratedNever();
+            entity.HasIndex(property => property.QuoteReference).IsUnique().HasDatabaseName("UX_Properties_QuoteReference");
+            entity.Property(property => property.CreatedAt).HasPrecision(0);
             entity.Property(property => property.Postcode).HasMaxLength(16).IsRequired();
             entity.Property(property => property.Region).HasMaxLength(100);
             entity.Property(property => property.RebuildCost).HasPrecision(10, 2);

@@ -22,10 +22,12 @@ below for historical context.
 - [x] 2. Add comparison references and timestamps to SQL schema.
   Verification: fresh SQL, populated legacy upgrade, repeated upgrade, unique references.
   Result: all five checks passed in CI run 42537192314, including real SQL upgrade verifier.
-- [~] 3. Support comparison schema upgrades in local tooling.
+- [x] 3. Support comparison schema upgrades in local tooling.
   Verification: fresh/legacy/current/partial schema integration checks.
-- [ ] 4. Map saved comparison metadata in EF Core.
+  Result: all five CI checks passed in run 42537357001, including initializer cases.
+- [x] 4. Map saved comparison metadata in EF Core.
   Verification: build and EF mapping tests.
+  Result: build and focused metadata test pass with .NET 9 roll-forward.
 - [ ] 5. Persist and return saved comparison metadata.
   Verification: persistence tests, including distinct references and empty results.
 - [ ] 6. Include comparison references in quote responses.
@@ -62,8 +64,9 @@ below for historical context.
 ## Blockers and verification notes
 
 Local environment has .NET 9 only; Docker, PHP, and Composer are absent from PATH.
-Use .NET roll-forward locally and native .NET 8/SQL/PHP in CI. SQL-dependent steps
-must pass CI before continuing dependent implementation.
+Use .NET roll-forward locally and native .NET 8/SQL/PHP in CI. User requested
+continuing without waiting for slow verification; quick checks run per step,
+with pending remote checks explicitly recorded rather than claimed as passed.
 
 ---
 
