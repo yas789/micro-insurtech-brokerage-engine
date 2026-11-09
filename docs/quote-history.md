@@ -87,4 +87,7 @@ Persistence returns the saved reference and second-precision UTC time after
 commit, including comparisons with no quotes. Repeated submissions remain distinct.
 The POST controller now includes this metadata; rating's internal `QuoteResponse`
 continues to carry only quotes, keeping storage concerns out of scheme calculations.
+`ComparisonLookupService` projects only the saved property and quote snapshot,
+without tracking entities or loading client identity. SQL datetime values are
+explicitly marked UTC when returned; equal premiums use ordinal name ordering.
 Production deployment remains placeholder-only.

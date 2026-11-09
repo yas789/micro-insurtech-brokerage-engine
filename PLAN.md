@@ -34,8 +34,9 @@ below for historical context.
 - [x] 6. Include comparison references in quote responses.
   Verification: controller success and failure-side-effect tests.
   Result: all 34 controller tests pass with .NET 9 roll-forward.
-- [ ] 7. Read saved comparisons without recalculating quotes.
+- [x] 7. Read saved comparisons without recalculating quotes.
   Verification: retrieval service tests for stored values, missing/empty results, identity exclusion.
+  Result: both snapshot/empty-set tests pass on .NET 9, including missing and read-only checks.
 - [ ] 8. Expose saved comparison retrieval in the core API.
   Verification: endpoint tests for valid, malformed, missing references and read-only behavior.
 - [ ] 9. Add saved comparison retrieval to the gateway client.
