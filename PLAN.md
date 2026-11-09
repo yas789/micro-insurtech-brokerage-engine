@@ -40,8 +40,10 @@ below for historical context.
 - [x] 8. Expose saved comparison retrieval in the core API.
   Verification: endpoint tests for valid, malformed, missing references and read-only behavior.
   Result: all 76 backend tests pass using .NET 9 roll-forward.
-- [ ] 9. Add saved comparison retrieval to the gateway client.
+- [x] 9. Add saved comparison retrieval to the gateway client.
   Verification: PHP HTTP-client and upstream-failure tests.
+  Result: reviewed all HTTP implementers and whitespace checks pass; PHP execution
+  deferred to CI (not available locally), per request to skip slow verification.
 - [ ] 10. Route saved comparison requests through PHP.
   Verification: route/method/reference tests and no-forwarding checks.
 - [ ] 11. Preserve retrieval response headers through the local proxy.

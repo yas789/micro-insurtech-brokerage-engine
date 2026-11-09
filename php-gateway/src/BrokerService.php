@@ -34,6 +34,22 @@ final class BrokerService
             'Content-Type' => 'application/json',
         ], $this->timeoutSeconds);
 
+        return $this->decodeResponse($coreResponse);
+    }
+
+    /** @return array{statusCode:int, body:array<string, mixed>} */
+    public function retrieveComparison(string $reference): array
+    {
+        $client = $this->httpClient ?? new CurlHttpClient();
+        return $this->decodeResponse($client->get(
+            rtrim($this->coreApiBaseUrl, '/') . self::QuoteEndpointPath . '/' . rawurlencode($reference),
+            ['Accept' => 'application/json'], $this->timeoutSeconds,
+        ));
+    }
+
+    /** @return array{statusCode:int, body:array<string, mixed>} */
+    private function decodeResponse(HttpResponse $coreResponse): array
+    {
         if ($coreResponse->error !== null) {
             return $this->gatewayError('Core engine is unavailable.', 502, $coreResponse->error);
         }

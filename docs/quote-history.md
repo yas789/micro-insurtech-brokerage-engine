@@ -93,4 +93,6 @@ explicitly marked UTC when returned; equal premiums use ordinal name ordering.
 The core GET route is implemented by `SavedComparisonsController`, whose only
 dependency is the read service. It rejects malformed/all-zero references without
 querying SQL and accepts uppercase canonical UUIDs.
+The gateway HTTP abstraction supports GET without a request body. Retrieval uses
+the same safe decoding/network/server-error handling as quote generation.
 Production deployment remains placeholder-only.

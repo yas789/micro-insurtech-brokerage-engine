@@ -217,6 +217,15 @@ final class GatewayRequestHandlerTest extends TestCase
 
 final class GatewayFakeHttpClient implements HttpClient
 {
+    public string $method = '';
+
+    public function get(string $url, array $headers, int $timeoutSeconds): HttpResponse
+    {
+        $this->url = $url;
+        $this->method = 'GET';
+        return $this->response;
+    }
+
     public string $url = '';
     public string $json = '';
 

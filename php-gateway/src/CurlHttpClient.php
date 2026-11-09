@@ -6,7 +6,17 @@ namespace MicroInsurTech\Gateway;
 
 final class CurlHttpClient implements HttpClient
 {
+    public function get(string $url, array $headers, int $timeoutSeconds): HttpResponse
+    {
+        return $this->send($url, null, $headers, $timeoutSeconds);
+    }
+
     public function postJson(string $url, string $json, array $headers, int $timeoutSeconds): HttpResponse
+    {
+        return $this->send($url, $json, $headers, $timeoutSeconds);
+    }
+
+    private function send(string $url, ?string $json, array $headers, int $timeoutSeconds): HttpResponse
     {
         $handle = curl_init($url);
 
@@ -21,13 +31,14 @@ final class CurlHttpClient implements HttpClient
         }
 
         curl_setopt_array($handle, [
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $json,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER => false,
             CURLOPT_TIMEOUT => $timeoutSeconds,
             CURLOPT_HTTPHEADER => $formattedHeaders,
         ]);
+        if ($json !== null) {
+            curl_setopt_array($handle, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => $json]);
+        }
 
         $rawResponse = curl_exec($handle);
         $error = curl_error($handle);
