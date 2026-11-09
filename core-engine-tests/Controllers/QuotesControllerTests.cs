@@ -244,12 +244,13 @@ public sealed class QuotesControllerTests
         public QuoteResponse? Response { get; private set; }
         public CancellationToken Token { get; private set; }
 
-        public Task SaveQuoteRequestAsync(QuoteRequest request, QuoteResponse response, CancellationToken cancellationToken)
+        public async Task<SavedComparisonMetadata> SaveQuoteRequestAsync(QuoteRequest request, QuoteResponse response, CancellationToken cancellationToken)
         {
             Request = request;
             Response = response;
             Token = cancellationToken;
-            return Completion.Task;
+            await Completion.Task;
+            return new SavedComparisonMetadata(Guid.NewGuid(), DateTime.UtcNow);
         }
     }
 
@@ -308,13 +309,13 @@ public sealed class QuotesControllerTests
     {
         public bool WasCalled { get; private set; }
 
-        public Task SaveQuoteRequestAsync(
+        public Task<SavedComparisonMetadata> SaveQuoteRequestAsync(
             QuoteRequest request,
             QuoteResponse response,
             CancellationToken cancellationToken)
         {
             WasCalled = true;
-            return Task.CompletedTask;
+            return Task.FromResult(new SavedComparisonMetadata(Guid.NewGuid(), DateTime.UtcNow));
         }
     }
 }

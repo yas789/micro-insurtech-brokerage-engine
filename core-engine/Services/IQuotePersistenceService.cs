@@ -4,7 +4,7 @@ namespace MicroInsurTech.CoreEngine.Services;
 
 public interface IQuotePersistenceService
 {
-    Task SaveQuoteRequestAsync(
+    Task<SavedComparisonMetadata> SaveQuoteRequestAsync(
         QuoteRequest request,
         QuoteResponse response,
         CancellationToken cancellationToken);

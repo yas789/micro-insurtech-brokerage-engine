@@ -83,4 +83,6 @@ disposable database to check fresh/legacy/repeated application and uniqueness.
 API and UI implementation follows on `feature/quote-history`.
 EF maps the unique reference index and second-precision timestamp; references
 are application-generated, so SQL defaults also support standalone SQL inserts.
+Persistence returns the saved reference and second-precision UTC time after
+commit, including comparisons with no quotes. Repeated submissions remain distinct.
 Production deployment remains placeholder-only.

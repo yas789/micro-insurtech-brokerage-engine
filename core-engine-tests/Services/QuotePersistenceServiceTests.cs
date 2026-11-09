@@ -40,11 +40,17 @@ public sealed class QuotePersistenceServiceTests
             new QuoteResult("AXA", 1000.00m, "Medium", "London"),
         });
 
-        await service.SaveQuoteRequestAsync(request, response, CancellationToken.None);
+        var metadata = await service.SaveQuoteRequestAsync(request, response, CancellationToken.None);
 
         var client = await dbContext.Clients.SingleAsync();
         var property = await dbContext.Properties.SingleAsync();
         var quotes = await dbContext.Quotes.OrderBy(quote => quote.PremiumAmount).ToArrayAsync();
+
+        Assert.NotEqual(Guid.Empty, metadata.QuoteReference);
+        Assert.Equal(property.QuoteReference, metadata.QuoteReference);
+        Assert.Equal(property.CreatedAt, metadata.CreatedAt);
+        Assert.Equal(DateTimeKind.Utc, metadata.CreatedAt.Kind);
+        Assert.Equal(0, metadata.CreatedAt.Ticks % TimeSpan.TicksPerSecond);
 
         Assert.Equal(ValidFirstName, client.FirstName);
         Assert.Equal(ValidLastName, client.LastName);
@@ -98,12 +104,14 @@ public sealed class QuotePersistenceServiceTests
             new PropertyEvaluationDto("SW1A 1AA", 1910, 750000.00m, false));
         var response = new QuoteResponse(Array.Empty<QuoteResult>());
 
-        await service.SaveQuoteRequestAsync(request, response, CancellationToken.None);
+        var first = await service.SaveQuoteRequestAsync(request, response, CancellationToken.None);
+        var second = await service.SaveQuoteRequestAsync(request, response, CancellationToken.None);
+        Assert.NotEqual(first.QuoteReference, second.QuoteReference);
 
-        Assert.Equal(1, await dbContext.Clients.CountAsync());
-        Assert.Equal(1, await dbContext.Properties.CountAsync());
+        Assert.Equal(2, await dbContext.Clients.CountAsync());
+        Assert.Equal(2, await dbContext.Properties.CountAsync());
         Assert.Equal(0, await dbContext.Quotes.CountAsync());
-        Assert.Null((await dbContext.Properties.SingleAsync()).Region);
+        Assert.All(await dbContext.Properties.ToArrayAsync(), property => Assert.Null(property.Region));
     }
 
     [Fact]
