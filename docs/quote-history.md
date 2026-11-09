@@ -95,4 +95,7 @@ dependency is the read service. It rejects malformed/all-zero references without
 querying SQL and accepts uppercase canonical UUIDs.
 The gateway HTTP abstraction supports GET without a request body. Retrieval uses
 the same safe decoding/network/server-error handling as quote generation.
+PHP now routes GET comparison requests, normalizes canonical references to
+lowercase, and rejects invalid references before making any upstream request.
+Non-GET methods on this route return 405; extra path segments return 404.
 Production deployment remains placeholder-only.

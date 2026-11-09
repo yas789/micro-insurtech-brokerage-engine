@@ -21,6 +21,18 @@ final class GatewayRequestHandler
             return ['statusCode' => 200, 'body' => ['status' => 'PHP gateway running']];
         }
 
+        if (preg_match('#^/api/quotes/([^/]+)$#D', $path, $matches) === 1) {
+            if ($method !== 'GET') {
+                return ['statusCode' => 405, 'body' => ['error' => 'Method not allowed.']];
+            }
+            $reference = strtolower($matches[1]);
+            if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/D', $reference) !== 1
+                || $reference === '00000000-0000-0000-0000-000000000000') {
+                return ['statusCode' => 400, 'body' => ['errors' => ['Comparison reference must be a valid UUID.']]];
+            }
+            return $this->brokerService->retrieveComparison($reference);
+        }
+
         if ($path !== '/api/quotes') {
             return ['statusCode' => 404, 'body' => ['error' => 'Route not found.']];
         }

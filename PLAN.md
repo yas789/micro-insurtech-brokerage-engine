@@ -44,8 +44,9 @@ below for historical context.
   Verification: PHP HTTP-client and upstream-failure tests.
   Result: reviewed all HTTP implementers and whitespace checks pass; PHP execution
   deferred to CI (not available locally), per request to skip slow verification.
-- [ ] 10. Route saved comparison requests through PHP.
+- [x] 10. Route saved comparison requests through PHP.
   Verification: route/method/reference tests and no-forwarding checks.
+  Result: route branches reviewed, docs/whitespace checks pass; PHPUnit pending CI.
 - [ ] 11. Preserve retrieval response headers through the local proxy.
   Verification: no-store headers and proxy regression tests.
 - [ ] 12. Display saved comparison references and private links.
