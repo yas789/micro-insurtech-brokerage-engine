@@ -57,8 +57,9 @@ below for historical context.
 - [x] 13. Open saved comparisons from private links.
   Verification: direct opening, malformed/missing links, network errors, no POST.
   Result: all 47 Vitest tests pass, including fragment startup/navigation and GET-only retrieval.
-- [ ] 14. Prevent stale comparison loads from replacing current results.
+- [x] 14. Prevent stale comparison loads from replacing current results.
   Verification: deferred retrieval/generation race tests.
+  Result: all 50 Vitest tests pass, including both generation/retrieval orderings.
 - [ ] 15. Store bounded browser comparison history.
   Verification: storage ordering, bounds, deduplication, corrupt/blocked storage tests.
 - [ ] 16. Render recent comparisons with reopen actions.

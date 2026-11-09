@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { bindSavedComparisonLinks, comparisonMetadata, loadSavedComparison, renderComparisonMetadata } from '../saved-comparisons.js';
+import { handleQuoteSubmit } from '../quote-ui.js';
 
 export const reference = '3fc8045c-0a9a-4df4-96d6-f530bddb899a';
 export const saved = { quoteReference: reference, createdAt: '2026-11-08T12:00:00Z', quotes: [],
@@ -10,6 +11,38 @@ function elements() {
 }
 
 describe('opening saved comparisons', () => {
+  it('ignores a stale load, including its busy-state cleanup', async () => {
+    const ui = elements();
+    let resolve;
+    const pending = new Promise((done) => { resolve = done; });
+    const first = loadSavedComparison(reference, ui, () => pending);
+    const other = '5fe8045c-0a9a-4df4-96d6-f530bddb899a';
+    await loadSavedComparison(other, ui, async () => ({ ok: true, json: async () => ({ ...saved, quoteReference: other }) }));
+    resolve({ ok: true, json: async () => saved });
+    expect(await first).toBeNull();
+    expect(ui.metadata.textContent).toContain(other);
+    expect(ui.metadata.textContent).not.toContain(reference);
+  });
+
+  it.each(['generation', 'retrieval'])('the latest action wins when %s starts last', async (latest) => {
+    const ui = elements();
+    const form = document.createElement('form');
+    const button = document.createElement('button');
+    let resolve;
+    const pending = new Promise((done) => { resolve = done; });
+    const generate = (request) => handleQuoteSubmit({ preventDefault() {} }, form, button, ui.status, ui.results, request);
+    const retrieve = (request) => loadSavedComparison(reference, ui, request);
+    const first = latest === 'generation' ? retrieve(() => pending) : generate(() => pending);
+    if (latest === 'generation') await generate(async () => ({ ok: true, json: async () => ({ quotes: [{ underwriterName: 'New generation', premiumAmount: 100 }] }) }));
+    else await retrieve(async () => ({ ok: true, json: async () => saved }));
+    const expected = ui.results.textContent;
+    resolve({ ok: true, json: async () => ({ ...saved, quotes: [{ underwriterName: 'Stale', premiumAmount: 1 }] }) });
+    await first;
+    expect(ui.results.textContent).toBe(expected);
+    expect(ui.results.textContent).not.toContain('Stale');
+    expect(button.disabled).toBe(false);
+  });
+
   it('uses GET and displays the saved snapshot without client fields', async () => {
     const ui = elements();
     const request = vi.fn().mockResolvedValue({ ok: true, json: async () => saved });

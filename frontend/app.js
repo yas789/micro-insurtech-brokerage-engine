@@ -10,6 +10,9 @@ if (quoteForm && submitButton && statusMessage && quoteResults) {
   const metadata = document.querySelector('#comparison-details');
   const summary = document.querySelector('#saved-property-summary');
   quoteForm.addEventListener('comparison-pending', () => {
+    if (window.location.hash.startsWith('#quote=')) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
     metadata?.replaceChildren();
     summary?.replaceChildren();
   });

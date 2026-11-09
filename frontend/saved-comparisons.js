@@ -1,4 +1,4 @@
-import { formatCurrency, formatError, renderEmptyState, renderQuotes, setStatus } from './quote-ui.js';
+import { beginResultUpdate, formatCurrency, formatError, renderEmptyState, renderQuotes, setStatus } from './quote-ui.js';
 
 export function normalizeReference(value) {
   if (typeof value !== 'string'
@@ -9,10 +9,12 @@ export function normalizeReference(value) {
 
 export async function loadSavedComparison(reference, elements, request = fetch) {
   const { status, results, metadata, summary } = elements;
+  const isCurrent = beginResultUpdate(results);
   metadata.replaceChildren();
   summary.replaceChildren();
   const normalized = normalizeReference(reference);
   if (!normalized) {
+    results.setAttribute('aria-busy', 'false');
     renderEmptyState(results, 'No saved comparison to display.');
     setStatus(status, 'Comparison link is invalid.', true);
     return null;
@@ -24,6 +26,7 @@ export async function loadSavedComparison(reference, elements, request = fetch) 
     const response = await request(`/api/quotes/${normalized}`, { method: 'GET', headers: { Accept: 'application/json' }, cache: 'no-store' });
     let body;
     try { body = await response.json(); } catch { throw new Error('Saved comparison returned an invalid response. Please try again.'); }
+    if (!isCurrent()) return null;
     if (!response.ok) throw new Error(response.status === 404 ? 'Saved comparison was not found.' : formatError(body));
     if (comparisonMetadata(body)?.quoteReference !== normalized || !Array.isArray(body.quotes)
       || typeof body.property?.postcode !== 'string') throw new Error('Saved comparison returned an invalid response. Please try again.');
@@ -33,11 +36,12 @@ export async function loadSavedComparison(reference, elements, request = fetch) 
     setStatus(status, body.quotes.length ? 'Saved comparison loaded. Prices are the original saved snapshot.' : 'No underwriters returned a quote for this risk.');
     return body;
   } catch (error) {
+    if (!isCurrent()) return null;
     renderEmptyState(results, 'No saved comparison to display.');
     setStatus(status, error instanceof Error ? error.message : 'Saved comparison could not be loaded.', true);
     return null;
   } finally {
-    results.setAttribute('aria-busy', 'false');
+    if (isCurrent()) results.setAttribute('aria-busy', 'false');
   }
 }
 
@@ -49,6 +53,12 @@ export function bindSavedComparisonLinks(elements, request = fetch, location = w
   const open = (reference) => loadSavedComparison(reference, elements, request);
   const loadFragment = () => {
     if (location.hash.startsWith('#quote=')) return open(location.hash.slice(7));
+    beginResultUpdate(elements.results);
+    elements.results.setAttribute('aria-busy', 'false');
+    elements.metadata.replaceChildren();
+    elements.summary.replaceChildren();
+    renderEmptyState(elements.results, 'Submit a property risk to view ranked underwriter options.');
+    setStatus(elements.status, '');
     return Promise.resolve(null);
   };
   events.addEventListener('hashchange', loadFragment);

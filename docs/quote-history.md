@@ -107,4 +107,8 @@ clears old metadata so an error cannot leave an unrelated saved link visible.
 Opening a `#quote=` fragment on startup or fragment navigation now retrieves the
 snapshot through PHP, shows a read-only property summary, and handles invalid,
 missing, unavailable, or malformed comparisons without submitting the form.
+Generation and retrieval share a latest-action token per results panel. Late
+successes, failures, and cleanup from superseded requests cannot replace current
+results or clear a newer loading state. Leaving a comparison fragment invalidates
+its pending load. New generation clears an old comparison fragment without loading it.
 Production deployment remains placeholder-only.
