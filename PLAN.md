@@ -60,8 +60,9 @@ below for historical context.
 - [x] 14. Prevent stale comparison loads from replacing current results.
   Verification: deferred retrieval/generation race tests.
   Result: all 50 Vitest tests pass, including both generation/retrieval orderings.
-- [ ] 15. Store bounded browser comparison history.
+- [x] 15. Store bounded browser comparison history.
   Verification: storage ordering, bounds, deduplication, corrupt/blocked storage tests.
+  Result: all 57 Vitest tests pass, including 7 storage cases.
 - [ ] 16. Render recent comparisons with reopen actions.
   Verification: DOM history rendering, updates, reopening, no client information.
 - [ ] 17. Add local history removal and accessible navigation.

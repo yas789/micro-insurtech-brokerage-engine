@@ -15,6 +15,7 @@ ASSETS = {
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
     "/quote-ui.js": ("quote-ui.js", "text/javascript; charset=utf-8"),
     "/saved-comparisons.js": ("saved-comparisons.js", "text/javascript; charset=utf-8"),
+    "/comparison-history.js": ("comparison-history.js", "text/javascript; charset=utf-8"),
     "/styles.css": ("styles.css", "text/css; charset=utf-8"),
 }
 

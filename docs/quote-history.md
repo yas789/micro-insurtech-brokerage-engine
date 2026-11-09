@@ -111,4 +111,8 @@ Generation and retrieval share a latest-action token per results panel. Late
 successes, failures, and cleanup from superseded requests cannot replace current
 results or clear a newer loading state. Leaving a comparison fragment invalidates
 its pending load. New generation clears an old comparison fragment without loading it.
+`comparison-history.js` stores version 1 under `micro-insurtech.comparisons.v1`.
+It validates and normalizes loaded entries, deduplicates by reference, sorts by
+creation time, and retains 20. Unsupported/corrupt storage starts empty; blocked
+or full storage falls back to page-memory history without breaking quotes.
 Production deployment remains placeholder-only.
