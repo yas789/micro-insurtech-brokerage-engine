@@ -119,4 +119,9 @@ The Recent comparisons panel lists saved references and times with reopen links.
 Successful generation and retrieval update the list; failed/stale requests do
 not. Reopening the currently selected entry retries retrieval instead of requiring
 a fragment change. History ordering remains creation-time order, not last-viewed order.
+Remove and Clear browser history update only local storage, make no API call, and
+announce that saved records/links still exist. Focus moves to the next history
+link or empty history region after removal, and to the results heading after a
+successful creation/open. History links wrap on narrow displays and keyboard
+focus has a visible outline.
 Production deployment remains placeholder-only.

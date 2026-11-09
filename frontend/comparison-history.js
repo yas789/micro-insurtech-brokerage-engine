@@ -3,13 +3,21 @@ import { comparisonMetadata } from './saved-comparisons.js';
 export const historyStorageKey = 'micro-insurtech.comparisons.v1';
 const limit = 20;
 
-export function renderComparisonHistory(container, entries, open) {
+export function renderComparisonHistory(container, entries, open, actions = {}) {
   container.replaceChildren();
+  container.tabIndex = -1;
   if (!entries.length) {
     container.textContent = 'No recent comparisons on this browser.';
     return;
   }
   const list = document.createElement('ul');
+  if (actions.clear) {
+    const clear = document.createElement('button');
+    clear.type = 'button';
+    clear.textContent = 'Clear browser history';
+    clear.addEventListener('click', () => { actions.clear(); container.focus(); });
+    container.append(clear);
+  }
   for (const entry of entries) {
     const row = document.createElement('li');
     const link = document.createElement('a');
@@ -20,6 +28,17 @@ export function renderComparisonHistory(container, entries, open) {
     time.dateTime = entry.createdAt;
     time.textContent = new Date(entry.createdAt).toLocaleString('en-GB');
     row.append(link, document.createTextNode(' — '), time);
+    if (actions.remove) {
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.textContent = 'Remove';
+      remove.setAttribute('aria-label', `Remove comparison ${entry.quoteReference} from this browser`);
+      remove.addEventListener('click', () => {
+        actions.remove(entry.quoteReference);
+        (container.querySelector('a') || container).focus();
+      });
+      row.append(remove);
+    }
     list.append(row);
   }
   container.append(list);
@@ -52,6 +71,14 @@ export function createComparisonHistory(storageProvider = () => window.localStor
       const metadata = comparisonMetadata(comparison);
       if (!metadata) return;
       entries = normalizeEntries([metadata, ...entries]);
+      persist();
+    },
+    remove(reference) {
+      entries = entries.filter((entry) => entry.quoteReference !== reference);
+      persist();
+    },
+    clear() {
+      entries = [];
       persist();
     },
   };

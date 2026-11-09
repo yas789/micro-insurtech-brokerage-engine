@@ -12,9 +12,21 @@ if (quoteForm && submitButton && statusMessage && quoteResults) {
   const summary = document.querySelector('#saved-property-summary');
   const recent = document.querySelector('#comparison-history');
   const history = createComparisonHistory();
+  const historyStatus = document.querySelector('#history-status');
   let links;
   const refreshHistory = () => {
-    if (recent) renderComparisonHistory(recent, history.list(), (reference) => links.navigate(reference));
+    if (recent) renderComparisonHistory(recent, history.list(), (reference) => links.navigate(reference), {
+      remove(reference) {
+        history.remove(reference);
+        refreshHistory();
+        if (historyStatus) historyStatus.textContent = 'Removed from this browser. The saved comparison and private link still exist.';
+      },
+      clear() {
+        history.clear();
+        refreshHistory();
+        if (historyStatus) historyStatus.textContent = 'Browser history cleared. Saved comparisons and private links still exist.';
+      },
+    });
   };
   const remember = (comparison) => {
     history.remember(comparison);
@@ -30,8 +42,14 @@ if (quoteForm && submitButton && statusMessage && quoteResults) {
   quoteForm.addEventListener('comparison-created', (event) => {
     if (metadata) renderComparisonMetadata(metadata, event.detail);
     remember(event.detail);
+    document.querySelector('#results-title')?.focus();
   });
   bindQuoteForm(quoteForm, submitButton, statusMessage, quoteResults);
-  if (metadata && summary) links = bindSavedComparisonLinks({ status: statusMessage, results: quoteResults, metadata, summary, onOpened: remember });
+  if (metadata && summary) links = bindSavedComparisonLinks({ status: statusMessage, results: quoteResults, metadata, summary,
+    onOpened(comparison) {
+      remember(comparison);
+      document.querySelector('#results-title')?.focus();
+    },
+  });
   refreshHistory();
 }

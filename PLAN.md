@@ -66,8 +66,10 @@ below for historical context.
 - [x] 16. Render recent comparisons with reopen actions.
   Verification: DOM history rendering, updates, reopening, no client information.
   Result: all 58 Vitest tests pass; full app wiring will be exercised in Playwright.
-- [ ] 17. Add local history removal and accessible navigation.
+- [x] 17. Add local history removal and accessible navigation.
   Verification: DOM and browser removal/clear/focus checks with no server deletion.
+  Result: all 59 Vitest tests pass, including persisted removal/clear and focus.
+  Real browser keyboard/mobile verification is pending step 19 CI.
 - [ ] 18. Verify saved comparison retrieval against SQL Server.
   Verification: full-stack saved metadata/value comparison, no writes, missing reference.
 - [ ] 19. Cover comparison links and browser history in Playwright.

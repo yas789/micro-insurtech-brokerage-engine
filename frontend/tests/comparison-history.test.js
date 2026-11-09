@@ -9,6 +9,30 @@ function storage(initial = null) {
 }
 
 describe('browser comparison history', () => {
+  it('removes/clears only local references and preserves focus after rendering', () => {
+    const store = storage();
+    const history = createComparisonHistory(() => store);
+    history.remember(saved);
+    const container = document.createElement('div');
+    document.body.append(container);
+    const open = vi.fn();
+    const actions = {
+      remove(id) { history.remove(id); renderComparisonHistory(container, history.list(), open, actions); },
+      clear() { history.clear(); renderComparisonHistory(container, history.list(), open, actions); },
+    };
+    renderComparisonHistory(container, history.list(), open, actions);
+    container.querySelector('button[aria-label]').click();
+    expect(history.list()).toEqual([]);
+    expect(document.activeElement).toBe(container);
+    history.remember(saved);
+    renderComparisonHistory(container, history.list(), open, actions);
+    container.querySelector('button').click();
+    expect(createComparisonHistory(() => store).list()).toEqual([]);
+    expect(open).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(container);
+    container.remove();
+  });
+
   it('renders an empty state then reopens entries without exposing extra fields', () => {
     const container = document.createElement('div');
     const open = vi.fn();
