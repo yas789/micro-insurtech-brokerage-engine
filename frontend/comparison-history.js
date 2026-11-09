@@ -3,6 +3,28 @@ import { comparisonMetadata } from './saved-comparisons.js';
 export const historyStorageKey = 'micro-insurtech.comparisons.v1';
 const limit = 20;
 
+export function renderComparisonHistory(container, entries, open) {
+  container.replaceChildren();
+  if (!entries.length) {
+    container.textContent = 'No recent comparisons on this browser.';
+    return;
+  }
+  const list = document.createElement('ul');
+  for (const entry of entries) {
+    const row = document.createElement('li');
+    const link = document.createElement('a');
+    link.href = `/#quote=${entry.quoteReference}`;
+    link.textContent = `Open comparison ${entry.quoteReference}`;
+    link.addEventListener('click', (event) => { event.preventDefault(); open(entry.quoteReference); });
+    const time = document.createElement('time');
+    time.dateTime = entry.createdAt;
+    time.textContent = new Date(entry.createdAt).toLocaleString('en-GB');
+    row.append(link, document.createTextNode(' — '), time);
+    list.append(row);
+  }
+  container.append(list);
+}
+
 function normalizeEntries(entries) {
   if (!Array.isArray(entries)) return [];
   const unique = new Map();

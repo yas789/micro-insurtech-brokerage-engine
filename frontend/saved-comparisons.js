@@ -50,7 +50,11 @@ export function renderPropertySummary(container, property) {
 }
 
 export function bindSavedComparisonLinks(elements, request = fetch, location = window.location, events = window) {
-  const open = (reference) => loadSavedComparison(reference, elements, request);
+  const open = async (reference) => {
+    const comparison = await loadSavedComparison(reference, elements, request);
+    if (comparison) elements.onOpened?.(comparison);
+    return comparison;
+  };
   const loadFragment = () => {
     if (location.hash.startsWith('#quote=')) return open(location.hash.slice(7));
     beginResultUpdate(elements.results);
@@ -63,7 +67,13 @@ export function bindSavedComparisonLinks(elements, request = fetch, location = w
   };
   events.addEventListener('hashchange', loadFragment);
   loadFragment();
-  return { open, loadFragment };
+  const navigate = (reference) => {
+    const hash = `#quote=${reference}`;
+    if (location.hash === hash) return open(reference);
+    location.hash = hash;
+    return Promise.resolve(null);
+  };
+  return { open, navigate, loadFragment };
 }
 
 export function comparisonMetadata(value) {

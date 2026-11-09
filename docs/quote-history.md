@@ -115,4 +115,8 @@ its pending load. New generation clears an old comparison fragment without loadi
 It validates and normalizes loaded entries, deduplicates by reference, sorts by
 creation time, and retains 20. Unsupported/corrupt storage starts empty; blocked
 or full storage falls back to page-memory history without breaking quotes.
+The Recent comparisons panel lists saved references and times with reopen links.
+Successful generation and retrieval update the list; failed/stale requests do
+not. Reopening the currently selected entry retries retrieval instead of requiring
+a fragment change. History ordering remains creation-time order, not last-viewed order.
 Production deployment remains placeholder-only.

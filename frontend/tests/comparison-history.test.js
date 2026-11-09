@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { createComparisonHistory, historyStorageKey } from '../comparison-history.js';
+import { describe, expect, it, vi } from 'vitest';
+import { createComparisonHistory, historyStorageKey, renderComparisonHistory } from '../comparison-history.js';
 
 const reference = '3fc8045c-0a9a-4df4-96d6-f530bddb899a';
 const saved = { quoteReference: reference, createdAt: '2026-11-08T12:00:00Z' };
@@ -9,6 +9,18 @@ function storage(initial = null) {
 }
 
 describe('browser comparison history', () => {
+  it('renders an empty state then reopens entries without exposing extra fields', () => {
+    const container = document.createElement('div');
+    const open = vi.fn();
+    renderComparisonHistory(container, [], open);
+    expect(container.textContent).toContain('No recent comparisons');
+    renderComparisonHistory(container, [{ ...saved, email: 'private@example.com' }], open);
+    container.querySelector('a').click();
+    expect(open).toHaveBeenCalledWith(reference);
+    expect(container.textContent).not.toContain('private@example.com');
+    expect(container.querySelector('a').getAttribute('href')).toBe(`/#quote=${reference}`);
+  });
+
   it('persists only normalized references and timestamps, deduplicated', () => {
     const store = storage();
     const history = createComparisonHistory(() => store);

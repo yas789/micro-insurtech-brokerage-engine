@@ -63,8 +63,9 @@ below for historical context.
 - [x] 15. Store bounded browser comparison history.
   Verification: storage ordering, bounds, deduplication, corrupt/blocked storage tests.
   Result: all 57 Vitest tests pass, including 7 storage cases.
-- [ ] 16. Render recent comparisons with reopen actions.
+- [x] 16. Render recent comparisons with reopen actions.
   Verification: DOM history rendering, updates, reopening, no client information.
+  Result: all 58 Vitest tests pass; full app wiring will be exercised in Playwright.
 - [ ] 17. Add local history removal and accessible navigation.
   Verification: DOM and browser removal/clear/focus checks with no server deletion.
 - [ ] 18. Verify saved comparison retrieval against SQL Server.
