@@ -128,7 +128,10 @@ public sealed class QuotesControllerTests
         var result = await controller.GenerateQuoteAsync(request, CancellationToken.None);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.Same(expectedResponse, okResult.Value);
+        var created = Assert.IsType<CreatedComparisonResponse>(okResult.Value);
+        Assert.Same(expectedResponse.Quotes, created.Quotes);
+        Assert.Equal(persistenceService.Metadata.QuoteReference, created.QuoteReference);
+        Assert.Equal(persistenceService.Metadata.CreatedAt, created.CreatedAt);
         Assert.True(persistenceService.WasCalled);
     }
 
@@ -203,7 +206,7 @@ public sealed class QuotesControllerTests
         Assert.Equal(cancellation.Token, persistence.Token);
         persistence.Completion.SetResult();
         var result = await pending.WaitAsync(TimeSpan.FromSeconds(5));
-        Assert.Same(response, Assert.IsType<OkObjectResult>(result.Result).Value);
+        Assert.Same(response.Quotes, Assert.IsType<CreatedComparisonResponse>(Assert.IsType<OkObjectResult>(result.Result).Value).Quotes);
     }
 
     [Fact]
@@ -307,6 +310,7 @@ public sealed class QuotesControllerTests
 
     private sealed class StubQuotePersistenceService : IQuotePersistenceService
     {
+        public SavedComparisonMetadata Metadata { get; } = new(Guid.NewGuid(), DateTime.UtcNow);
         public bool WasCalled { get; private set; }
 
         public Task<SavedComparisonMetadata> SaveQuoteRequestAsync(
@@ -315,7 +319,7 @@ public sealed class QuotesControllerTests
             CancellationToken cancellationToken)
         {
             WasCalled = true;
-            return Task.FromResult(new SavedComparisonMetadata(Guid.NewGuid(), DateTime.UtcNow));
+            return Task.FromResult(Metadata);
         }
     }
 }

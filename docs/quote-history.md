@@ -85,4 +85,6 @@ EF maps the unique reference index and second-precision timestamp; references
 are application-generated, so SQL defaults also support standalone SQL inserts.
 Persistence returns the saved reference and second-precision UTC time after
 commit, including comparisons with no quotes. Repeated submissions remain distinct.
+The POST controller now includes this metadata; rating's internal `QuoteResponse`
+continues to carry only quotes, keeping storage concerns out of scheme calculations.
 Production deployment remains placeholder-only.

@@ -31,8 +31,9 @@ below for historical context.
 - [x] 5. Persist and return saved comparison metadata.
   Verification: persistence tests, including distinct references and empty results.
   Result: all 6 persistence tests pass with .NET 9 roll-forward.
-- [ ] 6. Include comparison references in quote responses.
+- [x] 6. Include comparison references in quote responses.
   Verification: controller success and failure-side-effect tests.
+  Result: all 34 controller tests pass with .NET 9 roll-forward.
 - [ ] 7. Read saved comparisons without recalculating quotes.
   Verification: retrieval service tests for stored values, missing/empty results, identity exclusion.
 - [ ] 8. Expose saved comparison retrieval in the core API.

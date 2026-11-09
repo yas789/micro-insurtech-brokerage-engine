@@ -18,9 +18,9 @@ public sealed class QuotesController(
     private const decimal MaxRebuildCost = 99999999.99m;
 
     [HttpPost]
-    [ProducesResponseType(typeof(QuoteResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CreatedComparisonResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<QuoteResponse>> GenerateQuoteAsync(
+    public async Task<ActionResult<CreatedComparisonResponse>> GenerateQuoteAsync(
         [FromBody] QuoteRequest request,
         CancellationToken cancellationToken)
     {
@@ -32,9 +32,9 @@ public sealed class QuotesController(
         }
 
         var response = await quoteOrchestrationService.GenerateQuotesAsync(request, cancellationToken);
-        await quotePersistenceService.SaveQuoteRequestAsync(request, response, cancellationToken);
+        var saved = await quotePersistenceService.SaveQuoteRequestAsync(request, response, cancellationToken);
 
-        return Ok(response);
+        return Ok(new CreatedComparisonResponse(saved.QuoteReference, saved.CreatedAt, response.Quotes));
     }
 
     private static List<string> Validate(QuoteRequest? request)
