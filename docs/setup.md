@@ -78,6 +78,7 @@ Useful endpoints:
 
 - `GET /health`
 - `POST /api/quotes`
+- `GET /api/quotes/{reference}` (original saved comparison; no client identity).
 
 In a second shell, run the backend verification script:
 
@@ -125,6 +126,11 @@ composer test
 ```
 
 ## Frontend Local Run
+
+After generation, open the private link or use Recent comparisons to revisit
+saved prices. History is browser-local and bounded to 20 references; clearing it
+does not delete SQL records. Direct links work in a fresh browser. Anyone holding
+the link can view property details and saved prices. See `docs/quote-history.md`.
 
 Start the PHP gateway above, then serve the frontend with its local proxy from
 the repository root (Python 3.10+):

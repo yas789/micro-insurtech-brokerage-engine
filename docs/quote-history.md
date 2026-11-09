@@ -80,7 +80,12 @@ The fresh schema includes comparison metadata. Upgrade existing databases using
 `database/upgrades/001-saved-comparisons.sql`; it preserves rows and backfills from
 client submission time. CI runs `scripts/verify-comparison-schema.py` against a
 disposable database to check fresh/legacy/repeated application and uniqueness.
-API and UI implementation follows on `feature/quote-history`.
+API, gateway, private-link UI, and browser history are implemented on
+`feature/quote-history`. Local verification results and any pending remote checks
+are recorded in `PLAN.md`; full-stack tests run in the feature PR.
+
+## Core implementation
+
 EF maps the unique reference index and second-precision timestamp; references
 are application-generated, so SQL defaults also support standalone SQL inserts.
 Persistence returns the saved reference and second-precision UTC time after
@@ -93,6 +98,9 @@ explicitly marked UTC when returned; equal premiums use ordinal name ordering.
 The core GET route is implemented by `SavedComparisonsController`, whose only
 dependency is the read service. It rejects malformed/all-zero references without
 querying SQL and accepts uppercase canonical UUIDs.
+
+## Gateway and cache behavior
+
 The gateway HTTP abstraction supports GET without a request body. Retrieval uses
 the same safe decoding/network/server-error handling as quote generation.
 PHP now routes GET comparison requests, normalizes canonical references to
@@ -101,6 +109,9 @@ Non-GET methods on this route return 405; extra path segments return 404.
 Core quote controllers and the PHP entrypoint send `Cache-Control: no-store`;
 the local proxy preserves the gateway's cache header on successful and failed
 upstream responses. Production routing must preserve it too.
+
+## Browser behavior
+
 Successful browser submissions now display saved reference/time and a private
 fragment link. Invalid/missing metadata renders no link. Starting a new submission
 clears old metadata so an error cannot leave an unrelated saved link visible.
@@ -124,4 +135,5 @@ announce that saved records/links still exist. Focus moves to the next history
 link or empty history region after removal, and to the results heading after a
 successful creation/open. History links wrap on narrow displays and keyboard
 focus has a visible outline.
+
 Production deployment remains placeholder-only.

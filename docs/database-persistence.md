@@ -40,6 +40,8 @@ Stores the submitted property details and the resolved postcode region when avai
 - `YearBuilt`
 - `RebuildCost`, from `0.01` to `99999999.99`, with at most two decimal places.
 - `IsUnoccupied`
+- `QuoteReference`, application-generated random UUID with a unique index.
+- `CreatedAt`, second-precision UTC timestamp returned only after commit.
 
 The frontend mirrors the `DECIMAL(10,2)` range and penny precision. Both the PHP
 gateway and core API reject costs above the maximum or with fractional pennies
@@ -66,4 +68,14 @@ The core engine requires the `BrokerDatabase` connection string:
 ConnectionStrings__BrokerDatabase=Server=localhost,1433;Database=MicroInsurTech;User Id=sa;Password=<password>;TrustServerCertificate=True;
 ```
 
-The schema is maintained in `database/schema.sql`. Apply that SQL to SQL Server or Azure SQL before running quote requests against the API.
+The fresh schema is maintained in `database/schema.sql` (a destructive rebuild).
+Upgrade existing databases with `database/upgrades/001-saved-comparisons.sql`
+before deploying this API version. It retains records and assigns legacy
+comparisons random references and the linked client's creation time. The local
+initializer applies this upgrade automatically. Do not use the rebuild script
+to upgrade a populated database.
+
+Retrieval uses the public property reference, with a no-tracking projection that
+excludes client identity/internal IDs and returns saved quotes in premium order.
+It creates no new rows and never recalculates prices. Removing browser history
+does not delete database rows. See `docs/quote-history.md`.

@@ -42,15 +42,14 @@ below for historical context.
   Result: all 76 backend tests pass using .NET 9 roll-forward.
 - [x] 9. Add saved comparison retrieval to the gateway client.
   Verification: PHP HTTP-client and upstream-failure tests.
-  Result: reviewed all HTTP implementers and whitespace checks pass; PHP execution
-  deferred to CI (not available locally), per request to skip slow verification.
+  Result: all HTTP implementers reviewed; PHP tests pass in CI run 42723807673.
 - [x] 10. Route saved comparison requests through PHP.
   Verification: route/method/reference tests and no-forwarding checks.
-  Result: route branches reviewed, docs/whitespace checks pass; PHPUnit pending CI.
+  Result: route branches reviewed; docs/whitespace and PHPUnit pass (CI run 42723807673).
 - [x] 11. Preserve retrieval response headers through the local proxy.
   Verification: no-store headers and proxy regression tests.
   Result: all 4 Python proxy tests pass, including nested GET/404/cache headers.
-  Real core/PHP headers are included in the upcoming HTTP integration assertions.
+  Real core/PHP/proxy header assertions pass in CI run 42723807673.
 - [x] 12. Display saved comparison references and private links.
   Verification: DOM metadata/link tests and existing submission regressions.
   Result: all 41 Vitest tests pass, including metadata/link rendering.
@@ -69,18 +68,40 @@ below for historical context.
 - [x] 17. Add local history removal and accessible navigation.
   Verification: DOM and browser removal/clear/focus checks with no server deletion.
   Result: all 59 Vitest tests pass, including persisted removal/clear and focus.
-  Real browser keyboard/mobile verification is pending step 19 CI.
+  Real browser keyboard/mobile verification passes in CI run 42723807673.
 - [x] 18. Verify saved comparison retrieval against SQL Server.
   Verification: full-stack saved metadata/value comparison, no writes, missing reference.
-  Result: verifier starts/parses and docs/whitespace checks pass; new SQL assertions
-  pending CI. Latest CI PHP and .NET pass; browser suite needs status selectors
-  scoped now that history has its own status region (addressed in step 19).
+  Result: full-stack snapshot, metadata, stored-price, no-write and cache assertions
+  pass in CI run 42723807673. Status-selector regression resolved in step 19.
 - [x] 19. Cover comparison links and browser history in Playwright.
   Verification: real-stack history/link/failure browser journeys.
-  Result: Playwright discovers 10 tests; fixed all ambiguous status selectors.
-  Real-stack execution deferred to CI, without blocking local work.
-- [ ] 20. Finalize saved comparison documentation and verification.
+  Result: all 10 real-stack Chromium tests pass in CI run 42723807673;
+  all ambiguous status selectors fixed.
+- [x] 20. Finalize saved comparison documentation and verification.
   Verification: full CI, whitespace checks, all-commit and full-diff review, feature PR.
+  Result: reviewed all 19 implementation/planning commits and full feature diff;
+  final documentation reconciles architecture, setup, specification and persistence.
+  Local 76 backend tests (.NET 9 roll-forward), 59 Vitest tests, 4 proxy tests,
+  documentation and whitespace checks pass. Playwright discovers 10 tests.
+  All five CI checks pass at f572f19 in run 42723807673, including native .NET 8,
+  PHP, frontend, all 10 real-stack browser tests, SQL snapshot and schema-upgrade
+  checks. Final commit updates documentation only; its CI runs in the background.
+  Feature PR #22 targets dev; reviewed and ready for user review, not auto-merged.
+
+### Feature review
+
+- Schema upgrade preserves legacy data and timestamps; unique random public IDs
+  avoid exposing sequential IDs. Fresh/legacy/repeat/partial-schema cases passed
+  CI in steps 2–3.
+- Persistence returns metadata only after commit; lookup has no rating/writer
+  dependency and projects only property/quote data. UTC serialization and price
+  ordering reviewed across SQL/EF/HTTP.
+- PHP GET uses a fresh cURL handle without POST/body options; routing rejects
+  invalid references before forwarding. All PHP tests passed in CI through step 19.
+- Browser renders server text through DOM textContent; local history whitelists
+  reference/time only. Latest-action guards protect results, status and busy state.
+- Initial browser CI failure from duplicate status-role selectors is resolved in
+  step 19; full-stack rerun now passes (run 42723807673).
 
 ## Blockers and verification notes
 

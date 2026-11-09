@@ -100,6 +100,22 @@ Technology constraints:
 10. Browser renders quote comparison from lowest to highest premium.
 ```
 
+## Saved comparison retrieval
+
+Creation returns a random reference and UTC time after commit. Browser links
+use `/#quote=<reference>`; GET `/api/quotes/{reference}` travels through PHP to
+`SavedComparisonsController` and `ComparisonLookupService`. The service projects
+saved property details and quotes from SQL without loading client identity or
+calling enrichment, rating, or persistence. Original prices are snapshots.
+
+`frontend/saved-comparisons.js` loads/renders comparisons, while
+`comparison-history.js` maintains the newest 20 reference/time pairs in local
+storage and renders local removal controls. A per-results latest-action token
+prevents stale generation/retrieval responses overwriting newer UI state.
+Anyone with the private link can read property details/prices; this feature has
+no account ownership boundary. API responses use no-store cache headers.
+See `docs/quote-history.md` for access semantics and the non-destructive upgrade.
+
 ## Security Boundaries
 
 - Browser only communicates with the PHP gateway.
