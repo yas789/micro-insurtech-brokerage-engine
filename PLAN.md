@@ -51,8 +51,9 @@ below for historical context.
   Verification: no-store headers and proxy regression tests.
   Result: all 4 Python proxy tests pass, including nested GET/404/cache headers.
   Real core/PHP headers are included in the upcoming HTTP integration assertions.
-- [ ] 12. Display saved comparison references and private links.
+- [x] 12. Display saved comparison references and private links.
   Verification: DOM metadata/link tests and existing submission regressions.
+  Result: all 41 Vitest tests pass, including metadata/link rendering.
 - [ ] 13. Open saved comparisons from private links.
   Verification: direct opening, malformed/missing links, network errors, no POST.
 - [ ] 14. Prevent stale comparison loads from replacing current results.

@@ -24,6 +24,7 @@ export async function handleQuoteSubmit(event, formElement, buttonElement, statu
   }
 
   const requestPayload = buildQuotePayload(new FormData(formElement));
+  formElement.dispatchEvent(new CustomEvent('comparison-pending'));
   pendingQuoteForms.add(formElement);
   setLoading(buttonElement, true);
   resultsElement.setAttribute('aria-busy', 'true');
@@ -54,6 +55,7 @@ export async function handleQuoteSubmit(event, formElement, buttonElement, statu
     setStatus(statusElement, Array.isArray(quotes) && quotes.length > 0
       ? quotesReturnedMessage
       : noUnderwritersMessage);
+    formElement.dispatchEvent(new CustomEvent('comparison-created', { detail: responseBody }));
   } catch (error) {
     renderEmptyState(resultsElement, noQuotesMessage);
     setStatus(statusElement, error instanceof Error ? error.message : 'Quote request failed.', true);

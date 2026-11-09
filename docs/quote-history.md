@@ -101,4 +101,7 @@ Non-GET methods on this route return 405; extra path segments return 404.
 Core quote controllers and the PHP entrypoint send `Cache-Control: no-store`;
 the local proxy preserves the gateway's cache header on successful and failed
 upstream responses. Production routing must preserve it too.
+Successful browser submissions now display saved reference/time and a private
+fragment link. Invalid/missing metadata renders no link. Starting a new submission
+clears old metadata so an error cannot leave an unrelated saved link visible.
 Production deployment remains placeholder-only.
