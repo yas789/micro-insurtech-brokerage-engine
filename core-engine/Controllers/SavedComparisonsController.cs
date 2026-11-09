@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MicroInsurTech.CoreEngine.Controllers;
 
 [ApiController]
+[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 [Route("api/quotes")]
 public sealed class SavedComparisonsController(IComparisonLookupService lookup) : ControllerBase
 {

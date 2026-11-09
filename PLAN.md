@@ -47,8 +47,10 @@ below for historical context.
 - [x] 10. Route saved comparison requests through PHP.
   Verification: route/method/reference tests and no-forwarding checks.
   Result: route branches reviewed, docs/whitespace checks pass; PHPUnit pending CI.
-- [ ] 11. Preserve retrieval response headers through the local proxy.
+- [x] 11. Preserve retrieval response headers through the local proxy.
   Verification: no-store headers and proxy regression tests.
+  Result: all 4 Python proxy tests pass, including nested GET/404/cache headers.
+  Real core/PHP headers are included in the upcoming HTTP integration assertions.
 - [ ] 12. Display saved comparison references and private links.
   Verification: DOM metadata/link tests and existing submission regressions.
 - [ ] 13. Open saved comparisons from private links.
