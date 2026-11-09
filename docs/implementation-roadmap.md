@@ -120,6 +120,12 @@ Acceptance criteria:
 
 ## Phase 5: Hardening
 
+Saved comparison retrieval and browser-local history are implemented as an
+extension of the quote slice. API responses expose a private random reference;
+GET reads original SQL snapshots without client identity. A non-destructive
+schema upgrade supports existing records. Full delivery/verification notes are
+in `docs/quote-history.md` and `PLAN.md`.
+
 Deliverables:
 
 - Integration test notes.

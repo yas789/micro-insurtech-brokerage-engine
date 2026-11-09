@@ -128,7 +128,10 @@ public sealed class QuotesControllerTests
         var result = await controller.GenerateQuoteAsync(request, CancellationToken.None);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.Same(expectedResponse, okResult.Value);
+        var created = Assert.IsType<CreatedComparisonResponse>(okResult.Value);
+        Assert.Same(expectedResponse.Quotes, created.Quotes);
+        Assert.Equal(persistenceService.Metadata.QuoteReference, created.QuoteReference);
+        Assert.Equal(persistenceService.Metadata.CreatedAt, created.CreatedAt);
         Assert.True(persistenceService.WasCalled);
     }
 
@@ -203,7 +206,7 @@ public sealed class QuotesControllerTests
         Assert.Equal(cancellation.Token, persistence.Token);
         persistence.Completion.SetResult();
         var result = await pending.WaitAsync(TimeSpan.FromSeconds(5));
-        Assert.Same(response, Assert.IsType<OkObjectResult>(result.Result).Value);
+        Assert.Same(response.Quotes, Assert.IsType<CreatedComparisonResponse>(Assert.IsType<OkObjectResult>(result.Result).Value).Quotes);
     }
 
     [Fact]
@@ -244,12 +247,13 @@ public sealed class QuotesControllerTests
         public QuoteResponse? Response { get; private set; }
         public CancellationToken Token { get; private set; }
 
-        public Task SaveQuoteRequestAsync(QuoteRequest request, QuoteResponse response, CancellationToken cancellationToken)
+        public async Task<SavedComparisonMetadata> SaveQuoteRequestAsync(QuoteRequest request, QuoteResponse response, CancellationToken cancellationToken)
         {
             Request = request;
             Response = response;
             Token = cancellationToken;
-            return Completion.Task;
+            await Completion.Task;
+            return new SavedComparisonMetadata(Guid.NewGuid(), DateTime.UtcNow);
         }
     }
 
@@ -306,15 +310,16 @@ public sealed class QuotesControllerTests
 
     private sealed class StubQuotePersistenceService : IQuotePersistenceService
     {
+        public SavedComparisonMetadata Metadata { get; } = new(Guid.NewGuid(), DateTime.UtcNow);
         public bool WasCalled { get; private set; }
 
-        public Task SaveQuoteRequestAsync(
+        public Task<SavedComparisonMetadata> SaveQuoteRequestAsync(
             QuoteRequest request,
             QuoteResponse response,
             CancellationToken cancellationToken)
         {
             WasCalled = true;
-            return Task.CompletedTask;
+            return Task.FromResult(Metadata);
         }
     }
 }

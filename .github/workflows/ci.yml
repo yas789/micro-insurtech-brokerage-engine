@@ -139,6 +139,11 @@ jobs:
           SQLSERVER_SA_PASSWORD: Change_this_password_123!
         run: python3 scripts/run-integration.py
 
+      - name: Verify saved comparison schema upgrade
+        env:
+          SQLSERVER_SA_PASSWORD: Change_this_password_123!
+        run: python3 scripts/verify-comparison-schema.py
+
       - name: Upload failed quote journey diagnostics
         if: failure()
         uses: actions/upload-artifact@v4

@@ -14,6 +14,7 @@ use MicroInsurTech\Gateway\GatewayRequestHandler;
 use MicroInsurTech\Gateway\QuoteRequestHandler;
 
 header('Content-Type: application/json');
+header('Cache-Control: no-store');
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';

@@ -11,6 +11,7 @@ builder.Services.AddScoped<IUnderwriterService, AXAScheme>();
 builder.Services.AddScoped<IUnderwriterService, NichePropertyCover>();
 builder.Services.AddScoped<IQuoteOrchestrationService, QuoteOrchestrationService>();
 builder.Services.AddScoped<IQuotePersistenceService, QuotePersistenceService>();
+builder.Services.AddScoped<IComparisonLookupService, ComparisonLookupService>();
 builder.Services.AddDbContext<BrokerageDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("BrokerDatabase")

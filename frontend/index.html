@@ -65,12 +65,20 @@
         <section class="results-panel" aria-labelledby="results-title">
           <div class="results-heading">
             <p class="step">Step 3</p>
-            <h2 id="results-title">Quote Comparison</h2>
+            <h2 id="results-title" tabindex="-1">Quote Comparison</h2>
           </div>
+          <div id="comparison-details" class="comparison-details"></div>
+          <p id="saved-property-summary"></p>
           <div id="quote-results" class="empty-state" aria-busy="false">
             Submit a property risk to view ranked underwriter options.
           </div>
         </section>
+      </section>
+      <section class="history-panel" aria-labelledby="history-title">
+        <h2 id="history-title">Recent comparisons</h2>
+        <p>Saved on this browser only. Anyone with a comparison link can view its property details and saved prices. Removing history does not delete saved comparisons.</p>
+        <div id="comparison-history"></div>
+        <p id="history-status" role="status" aria-live="polite"></p>
       </section>
     </main>
     <script src="app.js" type="module"></script>

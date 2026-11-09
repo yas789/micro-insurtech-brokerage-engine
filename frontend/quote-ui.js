@@ -5,6 +5,13 @@ const noQuotesMessage = 'No quotes to display yet.';
 const noUnderwritersMessage = 'No underwriters returned a quote for this risk.';
 const quoteApiPath = '/api/quotes';
 const pendingQuoteForms = new WeakSet();
+const resultUpdates = new WeakMap();
+
+export function beginResultUpdate(resultsElement) {
+  const token = {};
+  resultUpdates.set(resultsElement, token);
+  return () => resultUpdates.get(resultsElement) === token;
+}
 const jsonHeaders = {
   'Content-Type': 'application/json',
   Accept: 'application/json',
@@ -24,6 +31,8 @@ export async function handleQuoteSubmit(event, formElement, buttonElement, statu
   }
 
   const requestPayload = buildQuotePayload(new FormData(formElement));
+  const isCurrent = beginResultUpdate(resultsElement);
+  formElement.dispatchEvent(new CustomEvent('comparison-pending'));
   pendingQuoteForms.add(formElement);
   setLoading(buttonElement, true);
   resultsElement.setAttribute('aria-busy', 'true');
@@ -45,6 +54,7 @@ export async function handleQuoteSubmit(event, formElement, buttonElement, statu
         : 'Quote request failed. Please try again.');
     }
 
+    if (!isCurrent()) return;
     if (!response.ok) {
       throw new Error(formatError(responseBody));
     }
@@ -54,13 +64,15 @@ export async function handleQuoteSubmit(event, formElement, buttonElement, statu
     setStatus(statusElement, Array.isArray(quotes) && quotes.length > 0
       ? quotesReturnedMessage
       : noUnderwritersMessage);
+    formElement.dispatchEvent(new CustomEvent('comparison-created', { detail: responseBody }));
   } catch (error) {
+    if (!isCurrent()) return;
     renderEmptyState(resultsElement, noQuotesMessage);
     setStatus(statusElement, error instanceof Error ? error.message : 'Quote request failed.', true);
   } finally {
     pendingQuoteForms.delete(formElement);
     setLoading(buttonElement, false);
-    resultsElement.setAttribute('aria-busy', 'false');
+    if (isCurrent()) resultsElement.setAttribute('aria-busy', 'false');
   }
 }
 

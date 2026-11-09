@@ -14,6 +14,8 @@ ASSETS = {
     "/index.html": ("index.html", "text/html; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
     "/quote-ui.js": ("quote-ui.js", "text/javascript; charset=utf-8"),
+    "/saved-comparisons.js": ("saved-comparisons.js", "text/javascript; charset=utf-8"),
+    "/comparison-history.js": ("comparison-history.js", "text/javascript; charset=utf-8"),
     "/styles.css": ("styles.css", "text/css; charset=utf-8"),
 }
 
@@ -24,10 +26,12 @@ def create_server(host="127.0.0.1", port=3000, gateway_url="http://127.0.0.1:808
         raise ValueError("GATEWAY_BASE_URL must be an HTTP origin without a path")
 
     class Handler(BaseHTTPRequestHandler):
-        def respond(self, status, body, content_type):
+        def respond(self, status, body, content_type, cache_control=None):
             self.send_response(status)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(body)))
+            if cache_control:
+                self.send_header("Cache-Control", cache_control)
             self.end_headers()
             if self.command != "HEAD":
                 self.wfile.write(body)
@@ -60,7 +64,7 @@ def create_server(host="127.0.0.1", port=3000, gateway_url="http://127.0.0.1:808
                 response = upstream.getresponse()
                 payload = response.read()
                 content_type = response.getheader("Content-Type", "application/json")
-                self.respond(response.status, payload, content_type)
+                self.respond(response.status, payload, content_type, response.getheader("Cache-Control"))
             except (OSError, http.client.HTTPException):
                 self.respond(502, b'{"error":"PHP gateway is unavailable."}', "application/json")
             finally:

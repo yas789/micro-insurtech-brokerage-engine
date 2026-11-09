@@ -11,6 +11,31 @@ use PHPUnit\Framework\TestCase;
 
 final class BrokerServiceTest extends TestCase
 {
+    /** @dataProvider retrievalResponses */
+    public function testRetrievalUsesGetAndSafeResponseHandling(int $status, string $body, ?string $error, int $expected): void
+    {
+        putenv('APP_ENV=production');
+        $http = new FakeHttpClient(new HttpResponse($status, $body, $error));
+        $reference = '3fc8045c-0a9a-4df4-96d6-f530bddb899a';
+        $result = (new BrokerService('http://core.local///', 7, $http))->retrieveComparison($reference);
+        self::assertSame('http://core.local/api/quotes/' . $reference, $http->url);
+        self::assertSame('GET', $http->method);
+        self::assertSame('', $http->json);
+        self::assertSame(7, $http->timeoutSeconds);
+        self::assertSame($expected, $result['statusCode']);
+        self::assertStringNotContainsString('secret', json_encode($result['body']));
+        if ($status === 200 && $expected === 200) self::assertSame(json_decode($body, true), $result['body']);
+    }
+
+    public static function retrievalResponses(): iterable
+    {
+        yield [200, '{"quoteReference":"saved","quotes":[]}', null, 200];
+        yield [404, '{"error":"Saved comparison was not found."}', null, 404];
+        yield [500, '{"error":"secret database detail"}', null, 502];
+        yield [200, 'not json', null, 502];
+        yield [0, '', 'secret connection detail', 502];
+    }
+
     private const EmptyQuoteResponseJson = '{"quotes":[]}';
     private const InvalidRiskResponseJson = '{"errors":["Invalid risk"]}';
     private const LeakyServerErrorJson = '{"error":"database password leaked"}';
@@ -150,6 +175,17 @@ final class BrokerServiceTest extends TestCase
 
 final class FakeHttpClient implements HttpClient
 {
+    public string $method = '';
+
+    public function get(string $url, array $headers, int $timeoutSeconds): HttpResponse
+    {
+        $this->url = $url;
+        $this->headers = $headers;
+        $this->timeoutSeconds = $timeoutSeconds;
+        $this->method = 'GET';
+        return $this->response;
+    }
+
     public string $url = '';
 
     public string $json = '';

@@ -98,6 +98,19 @@ The browser must not call the .NET core engine directly. The PHP gateway owns br
 
 Core API slice implemented: SQL schema, C# DTOs, `IUnderwriterService`, three underwriter schemes, `POST /api/quotes`, postcode region lookup, concurrent quote orchestration, EF Core SQL persistence, and unit tests. PHP gateway quote forwarding and frontend quote capture/result rendering are implemented.
 
+Saved comparisons are available through private links and this browser's Recent
+comparisons list. Successful submissions return a random `quoteReference` and
+UTC `createdAt`. `GET /api/quotes/{reference}` returns original saved prices and
+property details, excluding client names/email. Open `/#quote=<reference>` to
+revisit a comparison; anyone with the link can view it. The newest 20 references
+and timestamps are remembered locally. Remove/clear affects this browser only.
+See [saved comparisons](docs/quote-history.md) for contracts and access semantics.
+
+Existing databases must run the non-destructive upgrade before the updated API;
+`scripts/apply-local-schema.sh` handles fresh and existing local databases.
+The raw `database/schema.sql` remains a destructive rebuild script. Cover
+acceptance and real production deployment are still deferred.
+
 ## Verification quick start
 
 | Check | Working directory | Commands |

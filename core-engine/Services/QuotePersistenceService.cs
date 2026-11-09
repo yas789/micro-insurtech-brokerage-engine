@@ -7,7 +7,7 @@ namespace MicroInsurTech.CoreEngine.Services;
 
 public sealed class QuotePersistenceService(BrokerageDbContext dbContext) : IQuotePersistenceService
 {
-    public async Task SaveQuoteRequestAsync(
+    public async Task<SavedComparisonMetadata> SaveQuoteRequestAsync(
         QuoteRequest request,
         QuoteResponse response,
         CancellationToken cancellationToken)
@@ -33,6 +33,7 @@ public sealed class QuotePersistenceService(BrokerageDbContext dbContext) : IQuo
 
         var property = new PropertyEntity
         {
+            CreatedAt = new DateTime(DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond * TimeSpan.TicksPerSecond, DateTimeKind.Utc),
             Client = client,
             Postcode = request.Property.Postcode.Trim(),
             Region = response.Quotes.FirstOrDefault(quote => !string.IsNullOrWhiteSpace(quote.Region))?.Region,
@@ -61,6 +62,8 @@ public sealed class QuotePersistenceService(BrokerageDbContext dbContext) : IQuo
         {
             await transaction.CommitAsync(cancellationToken);
         }
+
+        return new SavedComparisonMetadata(property.QuoteReference, property.CreatedAt);
     }
 
     private async Task<IDbContextTransaction?> BeginTransactionIfSupportedAsync(CancellationToken cancellationToken)

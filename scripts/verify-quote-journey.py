@@ -6,9 +6,10 @@ import json
 import os
 import subprocess
 import sys
+from datetime import datetime
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 
 def check(condition, message):
@@ -16,7 +17,7 @@ def check(condition, message):
         raise AssertionError(message)
 
 
-def request(base_url, payload=None, path="/api/quotes"):
+def request(base_url, payload=None, path="/api/quotes", with_headers=False):
     data = None if payload is None else json.dumps(payload).encode()
     message = Request(base_url.rstrip("/") + path, data=data, headers={"Content-Type": "application/json"})
     try:
@@ -24,7 +25,23 @@ def request(base_url, payload=None, path="/api/quotes"):
     except HTTPError as error:
         response = error
     with response:
-        return response.status, json.load(response)
+        result = (response.status, json.load(response))
+        return (*result, response.headers) if with_headers else result
+
+
+def sql_output(query):
+    environment = dict(os.environ, SQLCMDPASSWORD=os.getenv("SQLSERVER_SA_PASSWORD", "Change_this_password_123!"))
+    command = [
+        "docker", "exec", "-e", "SQLCMDPASSWORD",
+        os.getenv("SQLSERVER_CONTAINER_NAME", "micro-insurtech-sql"),
+        "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-C", "-b",
+        "-d", os.getenv("SQLSERVER_DATABASE_NAME", "MicroInsurTech"),
+        "-h", "-1", "-s", "|", "-W", "-w", "65535", "-Q", query,
+    ]
+    result = subprocess.run(command, env=environment, capture_output=True, text=True, timeout=30)
+    if result.returncode != 0:
+        raise RuntimeError(f"SQL lookup failed: {result.stderr or result.stdout}")
+    return result.stdout
 
 
 def payload(email, postcode="SW1A 1AA", rebuild_cost=750000):
@@ -41,29 +58,19 @@ def persisted_rows(email):
                p.PropertyID, p.Postcode, p.YearBuilt,
                CONVERT(varchar(30), p.RebuildCost), CONVERT(int, p.IsUnoccupied),
                ISNULL(p.Region, '<NULL>'), q.QuoteID, q.UnderwriterName,
-               CONVERT(varchar(30), q.PremiumAmount), q.RiskRating, ISNULL(q.Region, '<NULL>')
+               CONVERT(varchar(30), q.PremiumAmount), q.RiskRating, ISNULL(q.Region, '<NULL>'),
+               CONVERT(varchar(36), p.QuoteReference), CONVERT(varchar(30), p.CreatedAt, 126)
         FROM dbo.Clients c
         LEFT JOIN dbo.Properties p ON p.ClientID = c.ClientID
         LEFT JOIN dbo.Quotes q ON q.PropertyID = p.PropertyID
         WHERE c.Email = '{escaped_email}'
         ORDER BY q.PremiumAmount, q.UnderwriterName;"""
-    environment = dict(os.environ, SQLCMDPASSWORD=os.getenv("SQLSERVER_SA_PASSWORD", "Change_this_password_123!"))
-    command = [
-        "docker", "exec", "-e", "SQLCMDPASSWORD",
-        os.getenv("SQLSERVER_CONTAINER_NAME", "micro-insurtech-sql"),
-        "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-C", "-b",
-        "-d", os.getenv("SQLSERVER_DATABASE_NAME", "MicroInsurTech"),
-        "-h", "-1", "-s", "|", "-W", "-w", "65535", "-Q", query,
-    ]
-    result = subprocess.run(command, env=environment, capture_output=True, text=True, timeout=30)
-    if result.returncode != 0:
-        raise RuntimeError(f"SQL lookup failed: {result.stderr or result.stdout}")
     rows = []
-    for line in result.stdout.splitlines():
+    for line in sql_output(query).splitlines():
         if not line.strip() or line.startswith("("):
             continue
         fields = line.split("|")
-        if len(fields) != 15:
+        if len(fields) != 17:
             raise RuntimeError(f"Unexpected SQL row shape: {line}")
         rows.append({
             "ClientID": int(fields[0]),
@@ -81,6 +88,8 @@ def persisted_rows(email):
             "PremiumAmount": float(fields[12]),
             "RiskRating": fields[13],
             "Region": None if fields[14] == "<NULL>" else fields[14],
+            "QuoteReference": fields[15].lower(),
+            "CreatedAt": fields[16] + "Z",
         })
     return rows
 
@@ -111,6 +120,40 @@ def verify_persistence(email, quotes, postcode="SW1A 1AA", rebuild_cost=750000):
         check(row["PropertyRegion"] == quote.get("region"), "Saved property region differs from quote")
 
 
+def verify_snapshot(base_url, email, created, postcode="SW1A 1AA", rebuild_cost=750000):
+    reference = str(UUID(created["quoteReference"]))
+    check(UUID(reference).version == 4, "Expected random UUID v4 reference")
+    rows = persisted_rows(email)
+    check(all(row["QuoteReference"] == reference for row in rows), "POST reference differs from SQL")
+    check(all(datetime.fromisoformat(row["CreatedAt"].replace("Z", "+00:00"))
+              == datetime.fromisoformat(created["createdAt"].replace("Z", "+00:00")) for row in rows), "Creation time differs from SQL")
+    counts_query = "SET NOCOUNT ON; SELECT (SELECT COUNT(*) FROM dbo.Clients),(SELECT COUNT(*) FROM dbo.Properties),(SELECT COUNT(*) FROM dbo.Quotes);"
+    before = sql_output(counts_query)
+    status, snapshot, headers = request(base_url, path=f"/api/quotes/{reference}", with_headers=True)
+    check(status == 200 and headers.get("Cache-Control") == "no-store", "GET status/cache headers incorrect")
+    check(set(snapshot) == {"quoteReference", "createdAt", "property", "quotes"}, "Unexpected snapshot fields")
+    check(snapshot["quoteReference"] == reference and snapshot["createdAt"] == created["createdAt"], "Metadata changed on retrieval")
+    check(snapshot["quotes"] == created["quotes"], "GET did not return original saved quotes")
+    check(snapshot["property"] == {
+        "postcode": postcode, "yearBuilt": 1910, "rebuildCost": rebuild_cost, "isUnoccupied": False,
+        "region": rows[0]["PropertyRegion"],
+    }, "GET property projection incorrect")
+    for invalid, expected in ((str(uuid4()), 404), ("invalid", 400), ("00000000-0000-0000-0000-000000000000", 400)):
+        status, body, headers = request(base_url, path=f"/api/quotes/{invalid}", with_headers=True)
+        check(status == expected and (body.get("error") or body.get("errors")), "GET error contract incorrect")
+        check(headers.get("Cache-Control") == "no-store", "Error response must not be cached")
+    check(sql_output(counts_query) == before and persisted_rows(email) == rows, "GET requests wrote data")
+    quote_id = rows[0]["QuoteID"]
+    original = rows[0]["PremiumAmount"]
+    try:
+        sql_output(f"UPDATE dbo.Quotes SET PremiumAmount=PremiumAmount+0.01 WHERE QuoteID={quote_id};")
+        status, changed = request(base_url, path=f"/api/quotes/{reference}")
+        check(status == 200 and round(changed["quotes"][0]["premiumAmount"], 2) == round(original + 0.01, 2), "Lookup rerated instead of reading SQL")
+    finally:
+        sql_output(f"UPDATE dbo.Quotes SET PremiumAmount={original} WHERE QuoteID={quote_id};")
+    print("PASS: saved reference/time/property/prices match SQL; GET is read-only and never rerates")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-url", default=os.getenv("FRONTEND_BASE_URL", "http://127.0.0.1:3000"))
@@ -135,13 +178,15 @@ def main():
     saved_samples = []
     for postcode, region in cases:
         email = f"smoke-{uuid4().hex}@example.com"
-        status, body = request(args.base_url, payload(email, postcode))
+        status, body, headers = request(args.base_url, payload(email, postcode), with_headers=True)
         check(status == 200, f"Quote request failed: {status} {body}")
+        check(headers.get("Cache-Control") == "no-store", "POST comparison must not be cached")
         quotes = body["quotes"]
         verify_quotes(quotes)
         if args.postcode_fixture:
             check(all(quote.get("region") == region for quote in quotes), "Postcode enrichment/fallback mismatch")
         verify_persistence(email, quotes, postcode)
+        verify_snapshot(args.base_url, email, body, postcode)
         saved_samples.append((email, quotes, postcode))
         print(f"PASS: {postcode} returned three ranked quotes and matching SQL records ({email})")
 

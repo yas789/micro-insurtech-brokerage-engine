@@ -32,6 +32,8 @@ Fields:
 - `YearBuilt`: Required integer.
 - `RebuildCost`: Required `DECIMAL(10,2)`.
 - `IsUnoccupied`: Required boolean or bit.
+- `QuoteReference`: Random public UUID identifying this submission's saved comparison, unique and indexed.
+- `CreatedAt`: UTC comparison creation time (second precision).
 
 Implemented constraints:
 
@@ -170,8 +172,13 @@ The endpoint returns quotes ordered from lowest premium to highest premium.
 
 Current persistence status:
 
-- Quote calculation and postcode enrichment are implemented.
-- Saving clients, properties, and quotes to SQL Server is pending the persistence slice.
+- Quote calculation, postcode enrichment, and transactional SQL persistence are implemented.
+- POST success includes `quoteReference` and `createdAt` only after persistence commits.
+- `GET /api/quotes/{reference}` returns saved metadata, property details, and
+  original quotes without rating, enrichment, or writes. Client names/email and
+  internal IDs are omitted. Malformed references return 400; missing ones return 404.
+- Private browser links and a 20-entry local history reopen saved comparisons;
+  link possession grants read access. See `docs/quote-history.md` for full contracts.
 
 ## Validation Requirements
 

@@ -1,4 +1,118 @@
-# Codebase improvement plan
+# Saved comparison delivery plan
+
+## Current feature
+
+Goal: reopen original saved comparisons by private link and keep the newest 20
+references in this browser. Branch: `feature/quote-history`, based on `dev`
+at `4a6cb31`. Feature PR targets `dev`; production promotion is separate.
+Contracts and acceptance criteria: `docs/quote-history.md`.
+
+Baseline: submissions already persist a new client/property and quote set before
+success. There is no retrieval endpoint, public reference, or browser history.
+The SQL initializer preserves existing tables but does not upgrade them.
+
+Execute one item at a time; record actual verification before committing each
+item. No implementation is included in step 1. Prior completed work is retained
+below for historical context.
+
+- [x] 1. Document saved comparison contracts and delivery plan.
+  Verification: documentation checker and review against existing consumers.
+  Result: docs and whitespace checks pass; additive POST fields preserve current
+  quotes consumers. Contract excludes identity data and defines legacy upgrades.
+- [x] 2. Add comparison references and timestamps to SQL schema.
+  Verification: fresh SQL, populated legacy upgrade, repeated upgrade, unique references.
+  Result: all five checks passed in CI run 42537192314, including real SQL upgrade verifier.
+- [x] 3. Support comparison schema upgrades in local tooling.
+  Verification: fresh/legacy/current/partial schema integration checks.
+  Result: all five CI checks passed in run 42537357001, including initializer cases.
+- [x] 4. Map saved comparison metadata in EF Core.
+  Verification: build and EF mapping tests.
+  Result: build and focused metadata test pass with .NET 9 roll-forward.
+- [x] 5. Persist and return saved comparison metadata.
+  Verification: persistence tests, including distinct references and empty results.
+  Result: all 6 persistence tests pass with .NET 9 roll-forward.
+- [x] 6. Include comparison references in quote responses.
+  Verification: controller success and failure-side-effect tests.
+  Result: all 34 controller tests pass with .NET 9 roll-forward.
+- [x] 7. Read saved comparisons without recalculating quotes.
+  Verification: retrieval service tests for stored values, missing/empty results, identity exclusion.
+  Result: both snapshot/empty-set tests pass on .NET 9, including missing and read-only checks.
+- [x] 8. Expose saved comparison retrieval in the core API.
+  Verification: endpoint tests for valid, malformed, missing references and read-only behavior.
+  Result: all 76 backend tests pass using .NET 9 roll-forward.
+- [x] 9. Add saved comparison retrieval to the gateway client.
+  Verification: PHP HTTP-client and upstream-failure tests.
+  Result: all HTTP implementers reviewed; PHP tests pass in CI run 42723807673.
+- [x] 10. Route saved comparison requests through PHP.
+  Verification: route/method/reference tests and no-forwarding checks.
+  Result: route branches reviewed; docs/whitespace and PHPUnit pass (CI run 42723807673).
+- [x] 11. Preserve retrieval response headers through the local proxy.
+  Verification: no-store headers and proxy regression tests.
+  Result: all 4 Python proxy tests pass, including nested GET/404/cache headers.
+  Real core/PHP/proxy header assertions pass in CI run 42723807673.
+- [x] 12. Display saved comparison references and private links.
+  Verification: DOM metadata/link tests and existing submission regressions.
+  Result: all 41 Vitest tests pass, including metadata/link rendering.
+- [x] 13. Open saved comparisons from private links.
+  Verification: direct opening, malformed/missing links, network errors, no POST.
+  Result: all 47 Vitest tests pass, including fragment startup/navigation and GET-only retrieval.
+- [x] 14. Prevent stale comparison loads from replacing current results.
+  Verification: deferred retrieval/generation race tests.
+  Result: all 50 Vitest tests pass, including both generation/retrieval orderings.
+- [x] 15. Store bounded browser comparison history.
+  Verification: storage ordering, bounds, deduplication, corrupt/blocked storage tests.
+  Result: all 57 Vitest tests pass, including 7 storage cases.
+- [x] 16. Render recent comparisons with reopen actions.
+  Verification: DOM history rendering, updates, reopening, no client information.
+  Result: all 58 Vitest tests pass; full app wiring will be exercised in Playwright.
+- [x] 17. Add local history removal and accessible navigation.
+  Verification: DOM and browser removal/clear/focus checks with no server deletion.
+  Result: all 59 Vitest tests pass, including persisted removal/clear and focus.
+  Real browser keyboard/mobile verification passes in CI run 42723807673.
+- [x] 18. Verify saved comparison retrieval against SQL Server.
+  Verification: full-stack saved metadata/value comparison, no writes, missing reference.
+  Result: full-stack snapshot, metadata, stored-price, no-write and cache assertions
+  pass in CI run 42723807673. Status-selector regression resolved in step 19.
+- [x] 19. Cover comparison links and browser history in Playwright.
+  Verification: real-stack history/link/failure browser journeys.
+  Result: all 10 real-stack Chromium tests pass in CI run 42723807673;
+  all ambiguous status selectors fixed.
+- [x] 20. Finalize saved comparison documentation and verification.
+  Verification: full CI, whitespace checks, all-commit and full-diff review, feature PR.
+  Result: reviewed all 19 implementation/planning commits and full feature diff;
+  final documentation reconciles architecture, setup, specification and persistence.
+  Local 76 backend tests (.NET 9 roll-forward), 59 Vitest tests, 4 proxy tests,
+  documentation and whitespace checks pass. Playwright discovers 10 tests.
+  All five CI checks pass at f572f19 in run 42723807673, including native .NET 8,
+  PHP, frontend, all 10 real-stack browser tests, SQL snapshot and schema-upgrade
+  checks. Final commit updates documentation only; its CI runs in the background.
+  Feature PR #22 targets dev; reviewed and ready for user review, not auto-merged.
+
+### Feature review
+
+- Schema upgrade preserves legacy data and timestamps; unique random public IDs
+  avoid exposing sequential IDs. Fresh/legacy/repeat/partial-schema cases passed
+  CI in steps 2–3.
+- Persistence returns metadata only after commit; lookup has no rating/writer
+  dependency and projects only property/quote data. UTC serialization and price
+  ordering reviewed across SQL/EF/HTTP.
+- PHP GET uses a fresh cURL handle without POST/body options; routing rejects
+  invalid references before forwarding. All PHP tests passed in CI through step 19.
+- Browser renders server text through DOM textContent; local history whitelists
+  reference/time only. Latest-action guards protect results, status and busy state.
+- Initial browser CI failure from duplicate status-role selectors is resolved in
+  step 19; full-stack rerun now passes (run 42723807673).
+
+## Blockers and verification notes
+
+Local environment has .NET 9 only; Docker, PHP, and Composer are absent from PATH.
+Use .NET roll-forward locally and native .NET 8/SQL/PHP in CI. User requested
+continuing without waiting for slow verification; quick checks run per step,
+with pending remote checks explicitly recorded rather than claimed as passed.
+
+---
+
+# Prior codebase improvement plan
 
 ## Goal and baseline
 

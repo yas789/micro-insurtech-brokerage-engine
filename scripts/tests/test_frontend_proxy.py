@@ -35,6 +35,27 @@ def request(port, method, path, body=None):
 
 
 class FrontendProxyTests(unittest.TestCase):
+    def test_get_comparison_preserves_no_store_and_status(self):
+        class Gateway(BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(404)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(b'{"error":"Saved comparison was not found."}')
+
+        with running(ThreadingHTTPServer(("127.0.0.1", 0), Gateway)) as upstream:
+            with running(frontend_server.create_server(port=0, gateway_url=f"http://127.0.0.1:{upstream}")) as port:
+                connection = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+                try:
+                    connection.request("GET", "/api/quotes/3fc8045c-0a9a-4df4-96d6-f530bddb899a")
+                    response = connection.getresponse()
+                    self.assertEqual(404, response.status)
+                    self.assertEqual("no-store", response.getheader("Cache-Control"))
+                    self.assertIn(b"not found", response.read())
+                finally:
+                    connection.close()
+
     def test_serves_only_browser_assets(self):
         with running(frontend_server.create_server(port=0)) as port:
             status, content_type, body = request(port, "GET", "/")

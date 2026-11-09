@@ -32,6 +32,8 @@ CREATE TABLE dbo.Properties
     YearBuilt INT NOT NULL,
     RebuildCost DECIMAL(10,2) NOT NULL,
     IsUnoccupied BIT NOT NULL,
+    QuoteReference UNIQUEIDENTIFIER NOT NULL CONSTRAINT DF_Properties_QuoteReference DEFAULT NEWID(),
+    CreatedAt DATETIME2(0) NOT NULL CONSTRAINT DF_Properties_CreatedAt DEFAULT SYSUTCDATETIME(),
 
     CONSTRAINT PK_Properties PRIMARY KEY CLUSTERED (PropertyID),
     CONSTRAINT FK_Properties_Clients FOREIGN KEY (ClientID) REFERENCES dbo.Clients (ClientID),
@@ -61,5 +63,6 @@ GO
 
 CREATE INDEX IX_Clients_Email ON dbo.Clients (Email);
 CREATE INDEX IX_Properties_ClientID ON dbo.Properties (ClientID);
+CREATE UNIQUE INDEX UX_Properties_QuoteReference ON dbo.Properties (QuoteReference);
 CREATE INDEX IX_Quotes_PropertyID ON dbo.Quotes (PropertyID);
 GO

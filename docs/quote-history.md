@@ -1,0 +1,139 @@
+# Saved comparisons and browser history
+
+## Feature contract
+
+Each successful submission creates a saved comparison, represented by its existing
+property row and linked quotes. It receives a random UUID v4 `quoteReference`
+(never a sequential database ID) and UTC `createdAt`. Return metadata only after
+persistence commits. Existing `quotes` remains unchanged in POST responses.
+
+`POST /api/quotes` success:
+
+```json
+{
+  "quoteReference": "3fc8045c-0a9a-4df4-96d6-f530bddb899a",
+  "createdAt": "2026-11-08T12:00:00Z",
+  "quotes": []
+}
+```
+
+`GET /api/quotes/{reference}` success:
+
+```json
+{
+  "quoteReference": "3fc8045c-0a9a-4df4-96d6-f530bddb899a",
+  "createdAt": "2026-11-08T12:00:00Z",
+  "property": {
+    "postcode": "SW1A 1AA",
+    "yearBuilt": 1910,
+    "rebuildCost": 750000.00,
+    "isUnoccupied": false,
+    "region": "London"
+  },
+  "quotes": []
+}
+```
+
+Retrieval returns the saved premiums and regions, ordered by premium then
+underwriter name. It never calls postcode lookup, rating, or persistence. Empty
+saved quote sets remain valid comparisons. Responses exclude names, email,
+client IDs, property IDs, and quote database IDs. Invalid canonical UUID syntax
+returns `400`; a well-formed but unknown reference returns `404`. Both layers use
+safe JSON errors. UUID matching is case-insensitive; the all-zero UUID is invalid.
+
+## Private links and local history
+
+Browser links use `/#quote=<reference>`; the fragment is not sent when fetching
+the page. Retrieval still goes through same-origin PHP `/api/quotes/{reference}`.
+Possession of a link grants access to property details and prices: no account or
+ownership check exists in this slice. Display that explanation next to links.
+References must not be placed in analytics. Comparison responses use
+`Cache-Control: no-store` through core, gateway, and local proxy.
+
+Remember only reference and creation time in a versioned local-storage list,
+newest first, deduplicated, capped at 20. Remember successful creation or opening;
+never store client fields, property details, or quote payloads locally. Blocked
+or corrupt storage must not prevent generation/retrieval. Remove/clear affects
+only this browser's list, not SQL records or the validity of existing links.
+Opening a link in a fresh browser works without its prior local history.
+Current premiums are snapshots, not a guarantee that cover can be purchased.
+Acceptance remains disabled. Refreshing/reopening must not submit a new quote.
+
+## Database compatibility
+
+Add `QuoteReference` (uniqueidentifier, uniquely indexed) and `CreatedAt`
+(datetime2 UTC) to Properties. Generate new references in the application. The
+upgrade backfills legacy references with SQL NEWID() and creation time from the
+linked client's CreatedAt (the original submission time). Existing data survives;
+historical references have no public enumeration endpoint. Fresh installs and
+upgraded databases must end with compatible columns/indexes. The upgrade must be
+repeatable and fail transactionally on unexpected partial state.
+
+## Delivery and verification
+
+The 20-commit checklist is in `PLAN.md`. Every behavior change updates this guide
+or other docs in the same commit. Verify each layer before the next; real SQL
+integration proves uniqueness/upgrade behavior and read-only retrieval, while
+Playwright proves private links, reloads, local removal, and failure recovery.
+
+The fresh schema includes comparison metadata. Upgrade existing databases using
+`database/upgrades/001-saved-comparisons.sql`; it preserves rows and backfills from
+client submission time. CI runs `scripts/verify-comparison-schema.py` against a
+disposable database to check fresh/legacy/repeated application and uniqueness.
+API, gateway, private-link UI, and browser history are implemented on
+`feature/quote-history`. Local verification results and any pending remote checks
+are recorded in `PLAN.md`; full-stack tests run in the feature PR.
+
+## Core implementation
+
+EF maps the unique reference index and second-precision timestamp; references
+are application-generated, so SQL defaults also support standalone SQL inserts.
+Persistence returns the saved reference and second-precision UTC time after
+commit, including comparisons with no quotes. Repeated submissions remain distinct.
+The POST controller now includes this metadata; rating's internal `QuoteResponse`
+continues to carry only quotes, keeping storage concerns out of scheme calculations.
+`ComparisonLookupService` projects only the saved property and quote snapshot,
+without tracking entities or loading client identity. SQL datetime values are
+explicitly marked UTC when returned; equal premiums use ordinal name ordering.
+The core GET route is implemented by `SavedComparisonsController`, whose only
+dependency is the read service. It rejects malformed/all-zero references without
+querying SQL and accepts uppercase canonical UUIDs.
+
+## Gateway and cache behavior
+
+The gateway HTTP abstraction supports GET without a request body. Retrieval uses
+the same safe decoding/network/server-error handling as quote generation.
+PHP now routes GET comparison requests, normalizes canonical references to
+lowercase, and rejects invalid references before making any upstream request.
+Non-GET methods on this route return 405; extra path segments return 404.
+Core quote controllers and the PHP entrypoint send `Cache-Control: no-store`;
+the local proxy preserves the gateway's cache header on successful and failed
+upstream responses. Production routing must preserve it too.
+
+## Browser behavior
+
+Successful browser submissions now display saved reference/time and a private
+fragment link. Invalid/missing metadata renders no link. Starting a new submission
+clears old metadata so an error cannot leave an unrelated saved link visible.
+Opening a `#quote=` fragment on startup or fragment navigation now retrieves the
+snapshot through PHP, shows a read-only property summary, and handles invalid,
+missing, unavailable, or malformed comparisons without submitting the form.
+Generation and retrieval share a latest-action token per results panel. Late
+successes, failures, and cleanup from superseded requests cannot replace current
+results or clear a newer loading state. Leaving a comparison fragment invalidates
+its pending load. New generation clears an old comparison fragment without loading it.
+`comparison-history.js` stores version 1 under `micro-insurtech.comparisons.v1`.
+It validates and normalizes loaded entries, deduplicates by reference, sorts by
+creation time, and retains 20. Unsupported/corrupt storage starts empty; blocked
+or full storage falls back to page-memory history without breaking quotes.
+The Recent comparisons panel lists saved references and times with reopen links.
+Successful generation and retrieval update the list; failed/stale requests do
+not. Reopening the currently selected entry retries retrieval instead of requiring
+a fragment change. History ordering remains creation-time order, not last-viewed order.
+Remove and Clear browser history update only local storage, make no API call, and
+announce that saved records/links still exist. Focus moves to the next history
+link or empty history region after removal, and to the results heading after a
+successful creation/open. History links wrap on narrow displays and keyboard
+focus has a visible outline.
+
+Production deployment remains placeholder-only.

@@ -13,6 +13,28 @@ use PHPUnit\Framework\TestCase;
 
 final class GatewayRequestHandlerTest extends TestCase
 {
+    /** @dataProvider retrievalRoutes */
+    public function testRetrievalRouting(string $method, string $path, int $expected, bool $forwarded): void
+    {
+        $client = new GatewayFakeHttpClient(new HttpResponse(404, '{"error":"Saved comparison was not found."}'));
+        $result = $this->createHandler($client)->handle($method, $path, '');
+        self::assertSame($expected, $result['statusCode']);
+        self::assertSame($forwarded ? 'GET' : '', $client->method);
+        if ($forwarded) self::assertSame('http://core-engine.local/api/quotes/3fc8045c-0a9a-4df4-96d6-f530bddb899a', $client->url);
+        else self::assertSame('', $client->url);
+    }
+
+    public static function retrievalRoutes(): iterable
+    {
+        yield ['GET', '/api/quotes/3FC8045C-0A9A-4DF4-96D6-F530BDDB899A', 404, true];
+        yield ['GET', '/api/quotes/not-a-reference', 400, false];
+        yield ['GET', '/api/quotes/00000000-0000-0000-0000-000000000000', 400, false];
+        yield ['GET', '/api/quotes/3fc8045c0a9a4df496d6f530bddb899a', 400, false];
+        yield ['POST', '/api/quotes/3fc8045c-0a9a-4df4-96d6-f530bddb899a', 405, false];
+        yield ['DELETE', '/api/quotes/3fc8045c-0a9a-4df4-96d6-f530bddb899a', 405, false];
+        yield ['GET', '/api/quotes/reference/extra', 404, false];
+    }
+
     public function testHandleReturnsHealthResponse(): void
     {
         $handler = $this->createHandler();
@@ -217,6 +239,15 @@ final class GatewayRequestHandlerTest extends TestCase
 
 final class GatewayFakeHttpClient implements HttpClient
 {
+    public string $method = '';
+
+    public function get(string $url, array $headers, int $timeoutSeconds): HttpResponse
+    {
+        $this->url = $url;
+        $this->method = 'GET';
+        return $this->response;
+    }
+
     public string $url = '';
     public string $json = '';
 

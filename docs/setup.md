@@ -53,7 +53,8 @@ SQLSERVER_SA_PASSWORD=Change_this_password_123! scripts/apply-local-schema.sh
 ```
 
 The initializer creates quote tables only when all three are absent. Re-running
-it preserves existing records; a partial schema is reported as an error. Database
+it preserves existing records and applies the repeatable saved-comparison upgrade
+from `database/upgrades/001-saved-comparisons.sql`; a partial schema is reported as an error. Database
 names must be simple SQL identifiers. The script resolves the schema relative to
 its own location and fails on SQL errors. `database/schema.sql` itself remains a
 destructive rebuild script, not a migration; do not use it to upgrade saved data.
@@ -77,6 +78,7 @@ Useful endpoints:
 
 - `GET /health`
 - `POST /api/quotes`
+- `GET /api/quotes/{reference}` (original saved comparison; no client identity).
 
 In a second shell, run the backend verification script:
 
@@ -124,6 +126,11 @@ composer test
 ```
 
 ## Frontend Local Run
+
+After generation, open the private link or use Recent comparisons to revisit
+saved prices. History is browser-local and bounded to 20 references; clearing it
+does not delete SQL records. Direct links work in a fresh browser. Anyone holding
+the link can view property details and saved prices. See `docs/quote-history.md`.
 
 Start the PHP gateway above, then serve the frontend with its local proxy from
 the repository root (Python 3.10+):
